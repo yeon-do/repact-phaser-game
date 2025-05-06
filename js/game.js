@@ -1,6 +1,6 @@
 // js/game.js 파일 시작
 
-// --- BootScene 클래스 정의: 게임 시작 화면 ---
+// 임의의 게임 시작 화면 구성을 위한 코드(실제 사용 X)
 class BootScene extends Phaser.Scene {
     constructor() {
         super('BootScene'); // 씬의 고유 이름 설정
@@ -54,12 +54,15 @@ class BootScene extends Phaser.Scene {
     }
 }
 
+
+
+// 1라운드 게임 초안
 class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
         console.log('GameScene: Constructor 실행.');
 
-        // --- 게임 플레이 중 필요한 변수들 ---
+        // --- 게임 플레이 중 필요한 변수들 --- (점수, 레벨, 시간, 목숨, 안내 메시지, 각 아이템 도형(임시), 커맨드 키 등등)
         this.score = 0; // 현재 점수
         this.scoreText = null; // 점수 표시 텍스트 오브젝트
         this.health = 3; // 체력 변수 (하트 3개)
@@ -72,7 +75,6 @@ class GameScene extends Phaser.Scene {
         this.itemTimeLimit = 3; // <-- 아이템별 시간 제한 (초)
         this.itemTimeRemaining = this.itemTimeLimit; // <-- 현재 아이템 남은 시간
         this.timeText = null; // <-- 시간 표시 텍스트 오브젝트 추가
-
 
         this.currentTrashItemGraphic = null; // 현재 쓰레기 아이템 사각형 오브젝트
         this.currentTrashItemData = null; // 현재 쓰레기 아이템의 규칙 데이터
@@ -87,7 +89,6 @@ class GameScene extends Phaser.Scene {
         this.isFalling = false; // 쓰레기가 현재 낙하 중인지 상태
         this.isProcessingResult = false; // 결과 처리 중인지 상태 (중복 충돌 방지)
 
-
         // --- 입력 상태 플래그 및 타이머 (칸 이동 반복 간격 제어용) ---
         this.moveLeft = false;
         this.moveRight = false;
@@ -100,6 +101,7 @@ class GameScene extends Phaser.Scene {
 
 
         // --- 임시 쓰레기 아이템 규칙 데이터 (사각형 색상, 정답, 메시지) ---
+        // !! 임시로 작성했다면, 실제 구현할 때는 DB에 저장된 규칙 데이터를 받아와서 사용할 예정입니다. 언제 어떻게 넘겨줄지.
         this.wasteRulesData = [
              { id: 'item_milkcarton', name: '우유팩', correctBin: 'bin_pack', messageInitial: '우유팩이 나타났어.\n어디에 분리배출 해야 할까?', messageCorrect: '정답이야! \n 우유팩은 종이팩으로 배출해야 해.', messageIncorrect: '오답이야! \n 우유팩의 배출 방법을 다시 생각해 볼까?' },
              { id: 'item_petbottle', name: '페트병', correctBin: 'bin_plastic', messageInitial: '페트병이 나타났어.\n어디에 분리배출 해야 할까?', messageCorrect: '정답!\n페트병은 플라스틱으로...', messageIncorrect: '오답!\n페트병 배출은...' },
@@ -136,11 +138,15 @@ class GameScene extends Phaser.Scene {
         this.lastResultIsCorrect = false;
     }
 
+
+    //UI 이미지 가져올 때 사용
     preload() {
         console.log('GameScene: preload 실행.');
         // TODO: 나중에 이미지 에셋 로드
     }
 
+
+    // 실제 화면 구성을 위한 함수 (화면 위 요소 배치, 버튼 플래그 설정)
     create() {
         console.log('GameScene: create 실행.');
 
@@ -250,6 +256,9 @@ class GameScene extends Phaser.Scene {
         console.log('GameScene: create 완료.');
     }
 
+
+
+    // 시간 타이머, 아이템 낙하, 아이템 정답 판별 진행 함수
     update(time, delta) {
         const deltaInSeconds = delta / 1000;
         const currentTime = time;
@@ -376,6 +385,8 @@ class GameScene extends Phaser.Scene {
 
 
     // --- 쓰레기 아이템을 랜덤으로 선택하고 화면에 사각형으로 표시하는 함수 ---
+    //!! 1라운드 형식의 게임에서 쓰레기 아이템 랜덤 선택할 때마다 백에서 가져올지? => 처음에 전체 규칙 전달하는 것으로 충분할 것 같음.
+
     spawnWasteItem () {
         // 이전 결과 UI 숨김 및 플래그 초기화 (resetGameState 또는 hideResultUIAndProceed에서 이미 호출)
         // hideResultUI() // 이미 resetGameState에서 호출됨
@@ -420,7 +431,6 @@ class GameScene extends Phaser.Scene {
 
     // --- 쓰레기 좌우 한 칸 이동 함수 ---
     moveLaneHorizontal(direction) {
-        // ... 생략 ... (이전 답변 코드와 동일)
         if (!this.currentTrashItemGraphic || !this.isFalling) return;
         const numberOfBins = this.binKeys.length;
         let nextLaneIndex = this.currentLaneIndex + direction;
@@ -719,4 +729,3 @@ const game = new Phaser.Game(config);
 // --- 이 아래에는 추가적인 게임 관련 코드가 오지 않도록 합니다 ---
 
 // js/game.js 파일 끝
-
