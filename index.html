@@ -84,7 +84,7 @@
     <div class="fontPreload">.</div>
 
     <script src="js/libraries/phaser.min.js"></script>
-    <script src="js/GAMEUP.js"></script>
+<!--    <script src="js/config.js"></script>-->
 
     <!-- 전체화면 스크립트 -->
     <script>
@@ -153,6 +153,14 @@
             e.preventDefault();
             return false;
         });
+    </script>
+
+    <script type="module">
+        import config from "./js/config.js";
+
+        const game = new Phaser.Game(config);
+
+        game.scene.start('BootScene');
     </script>
 </body>
 

@@ -1,171 +1,5 @@
+import {rules} from "../rules/wasteRules.js";
 
-class BootScene extends Phaser.Scene {
-    constructor() {
-        super('BootScene');
-
-        // 메뉴 관련 변수
-        this.menuItems = [
-            { text: '게임 시작', scene: 'GameScene' },
-            { text: '게임 방법', scene: 'HowToPlayScene' },
-            { text: '도감', scene: 'CatalogScene' },
-            { text: 'About 리필리', scene: 'AboutScene' }
-        ];
-        this.selectedMenuIndex = -1; // 초기에는 선택된 메뉴 없음
-        this.menuTexts = [];
-        this.selectionBar = null;
-        this.isTransitioning = false; // 전환 중인지 여부
-    }
-
-    preload() {
-        // 배경 이미지 로드
-        this.load.image('background_img', 'assets/images/main_background.png');
-
-        // 선택 바 이미지 로드
-        this.load.image('selection_bar', 'assets/images/white_bar.png');
-    }
-
-    create() {
-        const { width, height } = this.sys.game.canvas;
-
-        // 배경 이미지 설정
-        this.add.image(0, 0, 'background_img')
-            .setOrigin(0, 0)
-            .setDisplaySize(width, height);
-
-        // 선택 바 생성 (처음에는 보이지 않음)
-        this.selectionBar = this.add.image(40, 520, 'selection_bar')
-            .setOrigin(0, 0) // 왼쪽 상단을 기준점으로 설정
-            .setDisplaySize(360, 40) // 바 크기를 360x40으로 설정
-            .setVisible(false)
-            .setAlpha(0);
-
-        // 메뉴 아이템 생성
-        this.createMenuItems();
-
-        // 입력 이벤트 설정
-        this.input.on('pointerdown', this.handleMenuClick, this);
-
-        // 검은색 오버레이 생성 (처음에는 투명하게)
-        this.blackOverlay = this.add.rectangle(0, 0, this.sys.game.canvas.width, this.sys.game.canvas.height, 0x3cbb89)
-            .setOrigin(0, 0)
-            .setAlpha(0)
-            .setDepth(100) // 가장 위에 표시
-            .setVisible(false);
-    }
-
-    createMenuItems() {
-        const startY = 522;
-        const spacing = 40;
-        const menuX = this.sys.game.canvas.width - 60;
-
-        this.menuTexts = [];
-
-        this.menuItems.forEach((item, index) => {
-            const y = startY + (index * spacing);
-
-            // 메뉴 텍스트 생성 (모두 흰색으로 시작)
-            const text = this.add.text(menuX, y, item.text, {
-                font: '32px "머니그라피"',
-                fill: '#ffffff',
-                align: 'right'
-            })
-                .setOrigin(1, 0.5)
-                .setInteractive();
-
-            // 메뉴 아이템 데이터 저장
-            text.menuIndex = index;
-
-            this.menuTexts.push(text);
-        });
-    }
-
-    handleMenuClick(pointer) {
-        // 전환 중이면 클릭 무시
-        if (this.isTransitioning) return;
-
-        // 클릭한 메뉴 아이템 찾기
-        let clickedIndex = -1;
-
-        this.menuTexts.forEach(text => {
-            if (Phaser.Geom.Rectangle.Contains(text.getBounds(), pointer.x, pointer.y)) {
-                clickedIndex = text.menuIndex;
-            }
-        });
-
-        // 메뉴 아이템을 클릭한 경우
-        if (clickedIndex !== -1) {
-            this.showSelectionAndTransition(clickedIndex);
-        }
-    }
-
-    showSelectionAndTransition(index) {
-        // 범위 체크
-        if (index < 0 || index >= this.menuItems.length) return;
-
-        // 전환 중 상태로 설정
-        this.isTransitioning = true;
-
-        // 모든 텍스트 흰색으로 초기화
-        this.menuTexts.forEach(text => {
-            text.setFill('#ffffff');
-        });
-
-        // 선택된 메뉴 인덱스 저장
-        this.selectedMenuIndex = index;
-        const selectedText = this.menuTexts[index];
-
-        // 선택 바 위치 설정 및 표시 (선택된 메뉴 아이템의 y 위치에 맞춤)
-        this.selectionBar.setPosition(40, selectedText.y - 20); // y에서 20을 빼서 텍스트 중앙에 맞춤
-        this.selectionBar.setVisible(true);
-        this.selectionBar.setAlpha(1);
-
-        // 선택된 텍스트 색상 변경
-        selectedText.setFill('#3cbb89');
-
-        // 선택 바를 텍스트 뒤로 이동 (z-index 조정)
-        this.selectionBar.setDepth(1);
-        selectedText.setDepth(2);
-
-        this.time.delayedCall(500, () => {
-            this.startSelectedScene();
-        });
-
-        /*/ 1초 후 페이드 아웃 시작
-        this.time.delayedCall(500, () => {
-            // 선택 바와 텍스트 페이드 아웃
-            this.tweens.add({
-                targets: [this.selectionBar, selectedText],
-                alpha: 0,
-                duration: 500,
-                onComplete: () => {
-                    // 페이드 아웃 완료 후 씬 전환
-                    this.startSelectedScene();
-                }
-            });
-        });*/
-    }
-
-    startSelectedScene() {
-        const selectedItem = this.menuItems[this.selectedMenuIndex];
-
-        // 검은색 오버레이 표시
-        this.blackOverlay.setVisible(true);
-
-        // 페이드 아웃 효과
-        this.tweens.add({
-            targets: this.blackOverlay,
-            alpha: 1,
-            duration: 700,
-            onComplete: () => {
-                // 페이드 아웃 완료 후 씬 전환
-                this.scene.start(selectedItem.scene, { fromBlackOverlay: true });
-            }
-        });
-    }
-
-}
-
-// 메인 게임 씬 - 모든 라운드와 타입을 처리
 class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
@@ -180,12 +14,12 @@ class GameScene extends Phaser.Scene {
 
         // === 라운드 구성 정의 ===
         this.roundData = [
-            { round: 1, itemId: 'glass_bottle', type: 1 },
+            {round: 1, itemId: 'glass_bottle', type: 1},
             //{ round: 1, itemId: 'milk_carton', type: 2 },
-            { round: 2, itemId: 'milk_carton', type: 2 },
-            { round: 3, itemId: 'newspaper', type: 1 },
-            { round: 4, itemId: 'plastic_bottle', type: 2 },
-            { round: 5, itemId: 'chicken_bone', type: 3 },
+            {round: 2, itemId: 'milk_carton', type: 2},
+            {round: 3, itemId: 'newspaper', type: 1},
+            {round: 4, itemId: 'plastic_bottle', type: 2},
+            {round: 5, itemId: 'chicken_bone', type: 3},
         ];
 
         // === UI 요소들 ===
@@ -237,126 +71,7 @@ class GameScene extends Phaser.Scene {
         this.lastLandedLaneIndex = 0;
 
         // === 쓰레기 아이템 데이터 ===
-        this.wasteRulesData = [
-            // Type 1 아이템들
-            {
-                id: 'glass_bottle',
-                name: '유리병',
-                type: 1,
-                difficulty: 1,
-                correctBin: 'bin_glass',
-                messageInitial: '유리병이 나타났어.\n어디에 분리배출 해야 할까?',
-                messageCorrect: '정답! 유리병은 유리병 전용 수거함에!',
-                messageIncorrect: '오답! 유리병은 유리 전용 수거함에 넣어야 해.'
-            },
-            {
-                id: 'newspaper',
-                name: '신문지',
-                type: 1,
-                difficulty: 1,
-                correctBin: 'bin_paper',
-                messageInitial: '신문지가 나타났어.\n어디에 분리배출 해야 할까?',
-                messageCorrect: '정답! 신문지는 종이로 분리배출!',
-                messageIncorrect: '오답! 신문지는 종이류로 분리배출해야 해.'
-            },
-            // Type 2 아이템들 (전처리 필요)
-            {
-                id: 'milk_carton',
-                name: '우유팩',
-                preprocessedName: '세척하고 말린 우유팩',
-                type: 2,
-                difficulty: 3,
-                correctBin: 'bin_pack',
-                requiresPreprocessing: true,
-                preprocessingSteps: [
-                    {
-                        text: '펼치고',
-                        commands: [
-                            { action: 'left', key: '←', color: '#FF9500' },
-                            { action: 'right', key: '→', color: '#0080FF' }
-                        ]
-                    },
-                    {
-                        text: '물로 헹군 뒤',
-                        commands: [
-                            { action: 'down', key: '↓', color: '#00FF00' }
-                        ]
-                    },
-                    {
-                        text: '말린 다음',
-                        commands: [
-                            { action: 'left', key: '←', color: '#FF9500' },
-                            { action: 'right', key: '→', color: '#0080FF' }
-                        ]
-                    },
-                    {
-                        text: '차곡 차곡 모으기',
-                        commands: [
-                            { action: 'down', key: '↓', color: '#00FF00' }
-                        ]
-                    },
-                ],
-                messageInitial: 'xx우유 500ml 쓰레기가 나타났어.\n근데 이대로는 분리배출이 안될 것 같은데...',
-                messageWarning: 'xx우유 500ml 쓰레기가 나타났어.\n근데 이대로는 분리배출이 안될 것 같은데...',
-                messagePreprocessed: "잘 정리됐어! 이제 종이팩 수거함에 넣자!",
-                messagePreprocessingComplete: "휴, 드디어 우유팩을 분리배출 가능한 \n상태로 만들었어!", // 새로 추가
-                messageAfterPreprocessing: "자, 이제 그럼 다시 분리배출 해볼까?", // 고정 메시지
-                messageCorrect: "정답이야!\n우유팩은 일반 종이팩으로 배출해야해.",
-                messageIncorrect: "오답이야!\n우유팩의 배출 방법을 다시 생각해 볼까?"
-            },
-            {
-                id: 'plastic_bottle',
-                name: '플라스틱 병',
-                preprocessedName: '라벨을 제거한 플라스틱 병',
-                type: 2,
-                difficulty: 2,
-                correctBin: 'bin_plastic',
-                requiresPreprocessing: true,
-                preprocessingSteps: [
-                    {
-                        text: '라벨을 떼서 버리고',
-                        commands: [
-                            { action: 'left', key: '←', color: '#FF9500' },
-                            { action: 'right', key: '→', color: '#0080FF' }
-                        ]
-                    },
-                    {
-                        text: '물로 헹군 뒤',
-                        commands: [
-                            { action: 'down', key: '↓', color: '#00FF00' }
-                        ]
-                    },
-                    {
-                        text: '뚜껑을 분리하기',
-                        commands: [
-                            { action: 'left', key: '←', color: '#FF9500' },
-                            { action: 'right', key: '→', color: '#0080FF' }
-                        ]
-                    },
-                ],
-                messageInitial: '플라스틱 병이 나타났어.\n분리배출하려면 준비가 필요해!',
-                messageWarning: '쓰레기가 쓰레기통으로 떨어지지 않네?\n플라스틱 병의 분리배출 과정이 필요해!',
-                messagePreprocessed: '잘 정리됐어! 이제 플라스틱 수거함에 넣자!',
-                messageCorrect: "정답이야!\n플라스틱 병은 플라스틱으로 배출해야해.",
-                messageIncorrect: "오답이야!\n플라스틱 병의 배출 방법을 다시 생각해 볼까?"
-            },
-            // Type 3 아이템들 (퀴즈)
-            {
-                id: 'chicken_bone',
-                name: '닭뼈',
-                type: 3,
-                difficulty: 2,
-                correctBin: 'bin_general', // 일반쓰레기가 정답
-                quizQuestion: '닭뼈는 어떤 종류의 쓰레기일까?\n알맞은 분리배출 방법을 선택해보자!',
-                quizOptions: {
-                    left: '일반쓰레기',
-                    right: '음식쓰레기'
-                },
-                correctAnswer: 'left', // 왼쪽이 정답
-                messageCorrect: '정답이야!\n닭뼈는 일반쓰레기로 버려야 해!',
-                messageIncorrect: '오답이야!\n닭뼈의 배출 방법을 다시 생각해볼까?'
-            }
-        ];
+        this.wasteRulesData = rules
 
         this.messageTimeOut = '시간초과야 다시해볼까?';
 
@@ -366,7 +81,7 @@ class GameScene extends Phaser.Scene {
         this.binColors = {
             'bin_glass': 0x00ff00,    // 초록색 - 유리병
             'bin_paper': 0x0000ff,    // 파란색 - 종이
-            'bin_pack': 0xff0000,     // 빨간색 - 종이팩  
+            'bin_pack': 0xff0000,     // 빨간색 - 종이팩
             'bin_can': 0xffff00,      // 노란색 - 캔고철
             'bin_plastic': 0x800080   // 보라색 - 플라스틱
         };
@@ -390,9 +105,9 @@ class GameScene extends Phaser.Scene {
         this.selectedQuizAnswer = null;
 
         // === 화면 레이아웃 좌표 ===
-        this.panel = { x: 0, y: 0, width: 0, height: 0 };
-        this.messageArea = { x: 0, y: 0, width: 0, height: 0 };
-        this.commandButtonArea = { y: 0 };
+        this.panel = {x: 0, y: 0, width: 0, height: 0};
+        this.messageArea = {x: 0, y: 0, width: 0, height: 0};
+        this.commandButtonArea = {y: 0};
 
         // === 결과 표시 UI ===
         this.messageAreaGraphic = null;
@@ -515,7 +230,7 @@ class GameScene extends Phaser.Scene {
         this.resetGameState();
 
         // 검은색 오버레이 생성 (처음에는 완전히 불투명하게)
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
         this.blackOverlay = this.add.rectangle(0, 0, width, height, 0x3cbb89)
             .setOrigin(0, 0)
             .setAlpha(1)
@@ -541,7 +256,7 @@ class GameScene extends Phaser.Scene {
         // 각 게임 타입별 UI 컨테이너 생성
         this.uiContainers.common = this.add.container(); // 공통 UI (항상 표시)
         this.uiContainers.type1 = this.add.container();  // Type 1 UI
-        this.uiContainers.type2 = this.add.container();  // Type 2 UI  
+        this.uiContainers.type2 = this.add.container();  // Type 2 UI
         this.uiContainers.type3 = this.add.container();  // Type 3 UI
         this.uiContainers.type2Popup = this.add.container(); // Type 2 전처리 팝업
 
@@ -552,7 +267,7 @@ class GameScene extends Phaser.Scene {
     }
 
     createCommonUI() {
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
 
         // 배경색 설정
         this.cameras.main.setBackgroundColor('#3CBB89'); // 초록색 배경
@@ -585,7 +300,7 @@ class GameScene extends Phaser.Scene {
             font: '16px "머니그라피"',  // 폰트 변경
             fill: '#303030',
             align: 'left',  // 왼쪽 정렬
-            wordWrap: { width: this.messageArea.width - 20 },
+            wordWrap: {width: this.messageArea.width - 20},
             letterSpacing: 1,    // 글자 간격
             lineSpacing: 16       // 줄 간격
         };
@@ -671,7 +386,7 @@ class GameScene extends Phaser.Scene {
     }
 
     displayItemName(itemData) {
-        const { width } = this.sys.game.canvas;
+        const {width} = this.sys.game.canvas;
 
         // 디버깅 로그 추가
         console.log('displayItemName 호출됨');
@@ -806,14 +521,16 @@ class GameScene extends Phaser.Scene {
             .setVisible(false);
         this.uiContainers.common.add(this.resultButton);
 
-        const resultButtonStyle = { font: '18px Arial', fill: '#ffffff', align: 'center' };
+        const resultButtonStyle = {font: '18px Arial', fill: '#ffffff', align: 'center'};
         this.resultButtonText = this.add.text(resultButtonX, resultButtonY, '', resultButtonStyle)
             .setOrigin(0.5)
             .setDepth(1)
             .setVisible(false);
         this.uiContainers.common.add(this.resultButtonText);
 
-        this.resultButton.on('pointerdown', () => { this.hideResultUIAndProceed(); }, this);
+        this.resultButton.on('pointerdown', () => {
+            this.hideResultUIAndProceed();
+        }, this);
     }
 
     createType1UI() {
@@ -873,7 +590,7 @@ class GameScene extends Phaser.Scene {
             });
 
             // 쓰레기통 이름 텍스트
-            const nameStyle = { font: '14px 머니그라피', fill: '#303030', align: 'center' };
+            const nameStyle = {font: '14px 머니그라피', fill: '#303030', align: 'center'};
             const binName = this.binNames[index];
             // 텍스트는 쓰레기통의 상단 중앙에 배치
             const nameText = this.add.text(binCenterX, labelY, binName, nameStyle).setOrigin(0.5, 1);
@@ -883,7 +600,7 @@ class GameScene extends Phaser.Scene {
     }
 
     createCommandButtons() {
-        const { width } = this.sys.game.canvas;
+        const {width} = this.sys.game.canvas;
 
         // this.commandButtons가 객체가 아니면 초기화
         if (!this.commandButtons) {
@@ -995,7 +712,7 @@ class GameScene extends Phaser.Scene {
     }
 
     createType3UI() {
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
 
         // 기존 UI 컨테이너가 비어있는지 확인 (재생성 방지)
         if (this.uiContainers.type3.list.length > 0) {
@@ -1318,7 +1035,7 @@ class GameScene extends Phaser.Scene {
         if (!this.currentTrashItemGraphic || !this.isFalling) return;
 
         const currentTime = time;
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
 
         // 픽셀 단위 낙하를 위한 타이머 확인
         if (!this.lastFallTime) {
@@ -1676,7 +1393,7 @@ class GameScene extends Phaser.Scene {
     spawnType3Item(itemData) {
         console.log('GameScene: Type 3 아이템 생성');
 
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
 
         // 아이템 크기
         const itemWidth = 60;
@@ -1714,7 +1431,7 @@ class GameScene extends Phaser.Scene {
                 94,
                 570, //width / 2 - 82,590,
                 itemData.quizOptions?.left || '일반쓰레기',
-                { font: '20px 머니그라피', fill: '#000000', align: 'center', fontStyle: 'bold' }
+                {font: '20px 머니그라피', fill: '#000000', align: 'center', fontStyle: 'bold'}
             ).setOrigin(0, 0);
         } else {
             this.leftChoiceText.setText(itemData.quizOptions?.left || '일반쓰레기');
@@ -1725,7 +1442,7 @@ class GameScene extends Phaser.Scene {
             this.rightChoiceText = this.add.text(
                 245, 570,
                 itemData.quizOptions?.right || '음식물쓰레기',
-                { font: '20px 머니그라피', fill: '#000000', align: 'center', fontStyle: 'bold' }
+                {font: '20px 머니그라피', fill: '#000000', align: 'center', fontStyle: 'bold'}
             ).setOrigin(0, 0);
         } else {
             this.rightChoiceText.setText(itemData.quizOptions?.right || '음식물쓰레기');
@@ -1827,7 +1544,7 @@ class GameScene extends Phaser.Scene {
     }
 
     showWarningSlideAnimation() {
-        const { width, height } = this.sys.game.canvas;
+        const {width, height} = this.sys.game.canvas;
 
         // 경고 이미지 생성 (처음에는 화면 오른쪽 바깥에 위치)
         // 크기: 1417x556, 위치: 위에서 167px
@@ -1944,10 +1661,17 @@ class GameScene extends Phaser.Scene {
 
             // 흐린 이미지 키 결정
             switch (command.action) {
-                case 'left': keyImageKey = 'left_key_dim_img'; break;
-                case 'down': keyImageKey = 'down_key_dim_img'; break;
-                case 'right': keyImageKey = 'right_key_dim_img'; break;
-                default: keyImageKey = 'down_key_dim_img';
+                case 'left':
+                    keyImageKey = 'left_key_dim_img';
+                    break;
+                case 'down':
+                    keyImageKey = 'down_key_dim_img';
+                    break;
+                case 'right':
+                    keyImageKey = 'right_key_dim_img';
+                    break;
+                default:
+                    keyImageKey = 'down_key_dim_img';
             }
 
             // 키 이미지 생성 (크기 명시적 지정)
@@ -1974,10 +1698,17 @@ class GameScene extends Phaser.Scene {
             let activeKeyImageKey;
 
             switch (firstKey.action) {
-                case 'left': activeKeyImageKey = 'left_key_img'; break;
-                case 'down': activeKeyImageKey = 'down_key_img'; break;
-                case 'right': activeKeyImageKey = 'right_key_img'; break;
-                default: activeKeyImageKey = 'down_key_img';
+                case 'left':
+                    activeKeyImageKey = 'left_key_img';
+                    break;
+                case 'down':
+                    activeKeyImageKey = 'down_key_img';
+                    break;
+                case 'right':
+                    activeKeyImageKey = 'right_key_img';
+                    break;
+                default:
+                    activeKeyImageKey = 'down_key_img';
             }
 
             if (this.textures.exists(activeKeyImageKey)) {
@@ -2015,10 +1746,17 @@ class GameScene extends Phaser.Scene {
         // 활성화 이미지 키 결정
         let activeKeyImageKey;
         switch (currentKey.action) {
-            case 'left': activeKeyImageKey = 'left_key_img'; break;
-            case 'down': activeKeyImageKey = 'down_key_img'; break;
-            case 'right': activeKeyImageKey = 'right_key_img'; break;
-            default: activeKeyImageKey = 'down_key_img';
+            case 'left':
+                activeKeyImageKey = 'left_key_img';
+                break;
+            case 'down':
+                activeKeyImageKey = 'down_key_img';
+                break;
+            case 'right':
+                activeKeyImageKey = 'right_key_img';
+                break;
+            default:
+                activeKeyImageKey = 'down_key_img';
         }
 
         // 키 이미지 변경
@@ -2031,10 +1769,6 @@ class GameScene extends Phaser.Scene {
             }
         }
     }
-
-
-
-
 
 
     activateCommandKey(stepIndex, commandIndex) {
@@ -2056,10 +1790,17 @@ class GameScene extends Phaser.Scene {
             // 활성화 이미지로 변경
             let activeKeyImageKey;
             switch (currentKeyObj.command.action) {
-                case 'left': activeKeyImageKey = 'left_key_img'; break;
-                case 'down': activeKeyImageKey = 'down_key_img'; break;
-                case 'right': activeKeyImageKey = 'right_key_img'; break;
-                default: activeKeyImageKey = 'down_key_img';
+                case 'left':
+                    activeKeyImageKey = 'left_key_img';
+                    break;
+                case 'down':
+                    activeKeyImageKey = 'down_key_img';
+                    break;
+                case 'right':
+                    activeKeyImageKey = 'right_key_img';
+                    break;
+                default:
+                    activeKeyImageKey = 'down_key_img';
             }
 
             currentKeyObj.image.setTexture(activeKeyImageKey);
@@ -2084,10 +1825,17 @@ class GameScene extends Phaser.Scene {
 
         // 밝은 이미지 키 결정
         switch (step.action) {
-            case 'left': activeKeyImageKey = 'left_key_img'; break;
-            case 'down': activeKeyImageKey = 'down_key_img'; break;
-            case 'right': activeKeyImageKey = 'right_key_img'; break;
-            default: activeKeyImageKey = 'down_key_img';
+            case 'left':
+                activeKeyImageKey = 'left_key_img';
+                break;
+            case 'down':
+                activeKeyImageKey = 'down_key_img';
+                break;
+            case 'right':
+                activeKeyImageKey = 'right_key_img';
+                break;
+            default:
+                activeKeyImageKey = 'down_key_img';
         }
 
         // 1초 후 키 이미지 변경 (흐린 이미지 -> 밝은 이미지)
@@ -2112,28 +1860,28 @@ class GameScene extends Phaser.Scene {
                     });
                 }
                 this.messageCommandImages = [];
-    
+
                 if (this.messageTexts && this.messageTexts.length > 0) {
                     this.messageTexts.forEach(txt => {
                         if (txt && !txt.destroyed) txt.destroy();
                     });
                 }
                 this.messageTexts = [];
-    
+
                 // 메시지 텍스트 객체 숨기기
                 if (this.messageTextObject) {
                     this.messageTextObject.setVisible(false);
                 }
-    
+
                 // 시작 위치 설정
                 let currentX = 87;
                 let currentY = 665;
                 let lineCount = 0;
                 const maxStepsPerLine = 2; // 한 줄에 최대 2개 상황
-    
+
                 // 현재까지 진행된 모든 단계 표시
                 const processedSteps = new Set();
-    
+
                 // 완료된 단계와 현재 진행 중인 단계 찾기
                 for (const key of this.commandKeyImages) {
                     if (!key.image || key.image.destroyed) {
@@ -2144,10 +1892,10 @@ class GameScene extends Phaser.Scene {
                         processedSteps.add(key.stepIndex);
                     }
                 }
-    
+
                 // 단계별로 그룹화하여 표시
                 const sortedSteps = Array.from(processedSteps).sort((a, b) => a - b);
-    
+
                 for (const stepIndex of sortedSteps) {
                     // 한 줄에 2개 상황이 이미 있으면 다음 줄로
                     if (lineCount >= maxStepsPerLine && stepIndex > 0) {
@@ -2155,29 +1903,29 @@ class GameScene extends Phaser.Scene {
                         currentY += 30; // 다음 줄로 이동
                         lineCount = 0;
                     }
-    
+
                     // 해당 단계의 모든 커맨드 가져오기
                     const stepCommands = this.commandKeyImages.filter(key => key.stepIndex === stepIndex);
-    
+
                     if (stepCommands.length === 0) continue;
-    
+
                     // 단계 완료 여부 확인 (모든 커맨드가 완료되었는지)
                     const isStepCompleted = stepCommands.every(cmd => !cmd.image || cmd.image.destroyed);
-    
+
                     // 현재 진행 중인 단계이고 단일 커맨드인 경우 즉시 진하게 표시
                     const isCurrentStepWithSingleCommand = stepCommands.some(cmd => cmd.active) && stepCommands.length === 1;
-    
+
                     // 텍스트 스타일 결정
                     const textStyle = {
                         font: '16px Arial',
                         fill: (isStepCompleted || isCurrentStepWithSingleCommand) ? '#000000' : '#666666',
                         fontStyle: (isStepCompleted || isCurrentStepWithSingleCommand) ? 'bold' : 'normal'
                     };
-    
+
                     // 각 커맨드 키 이미지 추가
                     for (const command of stepCommands) {
                         let keyImageKey;
-    
+
                         // 이미지 키 결정
                         if (!command.image || command.image.destroyed) {
                             // 완료된 커맨드
@@ -2196,13 +1944,13 @@ class GameScene extends Phaser.Scene {
                                 default: keyImageKey = command.active ? 'down_key_img' : 'down_key_dim_img';
                             }
                         }
-    
+
                         // 키 이미지 생성 (20x20 크기)
                         const keyImage = this.add.image(currentX, currentY, keyImageKey)
                             .setDisplaySize(20, 20)
                             .setOrigin(0, 0.5)
                             .setDepth(20);
-    
+
                         // 색상 설정 (있는 경우)
                         if (command.color) {
                             try {
@@ -2212,27 +1960,27 @@ class GameScene extends Phaser.Scene {
                                 console.error('색상 설정 오류:', e);
                             }
                         }
-    
+
                         this.messageCommandImages.push(keyImage);
-    
+
                         // X 위치 업데이트
                         currentX += 25; // 키 이미지 너비(20) + 간격(5)
                     }
-    
+
                     // 텍스트 추가
                     const stepText = this.add.text(currentX, currentY, stepCommands[0].text, textStyle)
                         .setOrigin(0, 0.5)
                         .setDepth(20);
-    
+
                     this.messageTexts.push(stepText);
-    
+
                     // X 위치 업데이트
                     currentX += stepText.width + 10; // 텍스트 너비 + 간격(10)
-    
+
                     // 라인 카운트 증가
                     lineCount++;
                 }
-    
+
                 console.log('메시지 창 업데이트 완료');
             } catch (error) {
                 console.error('메시지 창 업데이트 중 오류:', error);
@@ -2317,18 +2065,32 @@ class GameScene extends Phaser.Scene {
                     if (!command.image || command.image.destroyed) {
                         // 완료된 커맨드 (패널과 동일한 활성화 이미지)
                         switch (command.action) {
-                            case 'left': keyImageKey = 'left_key_img'; break;
-                            case 'down': keyImageKey = 'down_key_img'; break;
-                            case 'right': keyImageKey = 'right_key_img'; break;
-                            default: keyImageKey = 'down_key_img';
+                            case 'left':
+                                keyImageKey = 'left_key_img';
+                                break;
+                            case 'down':
+                                keyImageKey = 'down_key_img';
+                                break;
+                            case 'right':
+                                keyImageKey = 'right_key_img';
+                                break;
+                            default:
+                                keyImageKey = 'down_key_img';
                         }
                     } else {
                         // 진행 중인 커맨드 (패널과 동일한 이미지)
                         switch (command.action) {
-                            case 'left': keyImageKey = command.active ? 'left_key_img' : 'left_key_dim_img'; break;
-                            case 'down': keyImageKey = command.active ? 'down_key_img' : 'down_key_dim_img'; break;
-                            case 'right': keyImageKey = command.active ? 'right_key_img' : 'right_key_dim_img'; break;
-                            default: keyImageKey = command.active ? 'down_key_img' : 'down_key_dim_img';
+                            case 'left':
+                                keyImageKey = command.active ? 'left_key_img' : 'left_key_dim_img';
+                                break;
+                            case 'down':
+                                keyImageKey = command.active ? 'down_key_img' : 'down_key_dim_img';
+                                break;
+                            case 'right':
+                                keyImageKey = command.active ? 'right_key_img' : 'right_key_dim_img';
+                                break;
+                            default:
+                                keyImageKey = command.active ? 'down_key_img' : 'down_key_dim_img';
                         }
                     }
 
@@ -2374,41 +2136,42 @@ class GameScene extends Phaser.Scene {
             console.error('메시지 창 업데이트 중 오류:', error);
         }
     }
+
     /*
         handlePreprocessingCommand(action) {
             try {
                 // 활성화된 첫 번째 커맨드 키 찾기
                 const currentKeyIndex = this.commandKeyImages.findIndex(key => key.active);
-     
+
                 if (currentKeyIndex === -1) {
                     console.log('활성화된 커맨드 키가 없음');
                     return;
                 }
-     
+
                 const currentKey = this.commandKeyImages[currentKeyIndex];
-     
+
                 // 액션 일치 확인
                 if (currentKey.action === action) {
                     console.log('올바른 키 입력:', action);
-     
+
                     // 새로운 상황의 첫 번째 커맨드인지 확인
                     const isFirstCommandOfNewStep = currentKeyIndex === 0 ||
                         (currentKeyIndex > 0 &&
                             this.commandKeyImages[currentKeyIndex].stepIndex !==
                             this.commandKeyImages[currentKeyIndex - 1].stepIndex);
-     
+
                     // 새로운 상황 시작 시 이미지 변경
                     if (isFirstCommandOfNewStep) {
                         // 상황 시작 시 이미지 변경 (stepIndex + 2로 계산)
                         this.updateItemImage(currentKey.stepIndex + 2);
                         console.log(`새로운 상황 시작: "${currentKey.text}" - step${currentKey.stepIndex + 2} 이미지로 변경`);
                     }
-     
+
                     // 마지막 커맨드인지 확인
                     const isLastCommand = currentKeyIndex === this.commandKeyImages.length - 1;
-     
+
                     this.updateMessageWithCommand();
-     
+
                     // 키 이미지 날아가는 애니메이션
                     this.tweens.add({
                         targets: currentKey.image,
@@ -2421,7 +2184,7 @@ class GameScene extends Phaser.Scene {
                                 currentKey.image.destroy();
                                 currentKey.image = null; // 참조 제거
                             }
-     
+
                             // 다음 커맨드 키들 앞으로 당기기
                             for (let i = currentKeyIndex + 1; i < this.commandKeyImages.length; i++) {
                                 const key = this.commandKeyImages[i];
@@ -2433,30 +2196,30 @@ class GameScene extends Phaser.Scene {
                                     });
                                 }
                             }
-     
+
                             // 현재 키 비활성화
                             currentKey.active = false;
-     
+
                             // 마지막 커맨드인 경우 특별 처리
                             if (isLastCommand) {
                                 // 마지막 상황도 메시지 창 업데이트
                                 this.updateMessageWithCommand();
-     
+
                                 // 잠시 후 전처리 완료 이미지로 변경하고 완료 시퀀스 시작
                                 this.time.delayedCall(500, () => {
                                     this.updateToPreprocessedImage();
-     
+
                                     // 1초 후 완료 시퀀스 시작
                                     this.time.delayedCall(1000, () => {
                                         this.startCompletionSequence();
                                     });
                                 });
                             } else {
-     
+
                                 // 다음 키 활성화
                                 const nextKey = this.commandKeyImages[currentKeyIndex + 1];
                                 nextKey.active = true;
-     
+
                                 // 다음 키 활성화 이미지로 변경
                                 if (nextKey.image) {
                                     let activeKeyImageKey;
@@ -2466,7 +2229,7 @@ class GameScene extends Phaser.Scene {
                                         case 'right': activeKeyImageKey = 'right_key_img'; break;
                                         default: activeKeyImageKey = 'down_key_img';
                                     }
-     
+
                                     if (this.textures.exists(activeKeyImageKey)) {
                                         nextKey.image.setTexture(activeKeyImageKey);
                                         nextKey.image.setDisplaySize(40, 43);
@@ -2585,10 +2348,17 @@ class GameScene extends Phaser.Scene {
                             if (nextKey.image) {
                                 let activeKeyImageKey;
                                 switch (nextKey.action) {
-                                    case 'left': activeKeyImageKey = 'left_key_img'; break;
-                                    case 'down': activeKeyImageKey = 'down_key_img'; break;
-                                    case 'right': activeKeyImageKey = 'right_key_img'; break;
-                                    default: activeKeyImageKey = 'down_key_img';
+                                    case 'left':
+                                        activeKeyImageKey = 'left_key_img';
+                                        break;
+                                    case 'down':
+                                        activeKeyImageKey = 'down_key_img';
+                                        break;
+                                    case 'right':
+                                        activeKeyImageKey = 'right_key_img';
+                                        break;
+                                    default:
+                                        activeKeyImageKey = 'down_key_img';
                                 }
 
                                 if (this.textures.exists(activeKeyImageKey)) {
@@ -2727,6 +2497,7 @@ class GameScene extends Phaser.Scene {
             console.error('메시지 보드 정리 중 오류:', error);
         }
     }
+
     // completePreprocessing 함수는 더 이상 사용하지 않으므로 제거하고
     // startCleanupAnimation 함수를 수정
 
@@ -2781,7 +2552,6 @@ class GameScene extends Phaser.Scene {
             }
         });
     }
-
 
 
     startCleanupAnimation() {
@@ -2855,7 +2625,7 @@ class GameScene extends Phaser.Scene {
 
         // 이전 아이템 참조 저장
         const oldItem = this.currentTrashItemGraphic;
-        const itemData = oldItem ? { ...oldItem.itemData } : null; // 데이터 깊은 복사
+        const itemData = oldItem ? {...oldItem.itemData} : null; // 데이터 깊은 복사
 
         // 이전 아이템 제거 (참조 정리)
         if (oldItem) {
@@ -2918,8 +2688,6 @@ class GameScene extends Phaser.Scene {
     }
 
 
-
-
     // === 공통 게임 로직 함수들 ===
     updateBinVisuals(newLaneIndex) {
         console.log('updateBinVisuals 호출:', newLaneIndex, '현재 게임 타입:', this.currentGameType);
@@ -2933,10 +2701,10 @@ class GameScene extends Phaser.Scene {
         }
 
         // 열린 쓰레기통과 닫힌 쓰레기통의 크기 및 위치 설정
-        const closedBinSize = { width: 50, height: 34 };
+        const closedBinSize = {width: 50, height: 34};
         const closedBinY = 581;
 
-        const openBinSize = { width: 51.14, height: 46.47 };
+        const openBinSize = {width: 51.14, height: 46.47};
         const openBinY = 568.53;
         const openBinXOffset = -2; // 열린 상태일 때 X 좌표 오프셋
 
@@ -2999,7 +2767,7 @@ class GameScene extends Phaser.Scene {
     moveLaneHorizontal(direction) {
         if (!this.currentTrashItemGraphic || !this.isFalling) return;
 
-        const { width } = this.sys.game.canvas;
+        const {width} = this.sys.game.canvas;
 
         if (this.currentGameType === 3) {
             // Type 3는 왼쪽(0)과 오른쪽(1)만 있음
@@ -3134,6 +2902,7 @@ class GameScene extends Phaser.Scene {
             }, [], this);
         }
     }
+
     // 라인 색상 변경 함수
     updateLineColor(isCorrect) {
         // 기존 라인 이미지가 있으면 제거
@@ -3161,7 +2930,7 @@ class GameScene extends Phaser.Scene {
                 this.time.delayedCall(700, () => {
                     // 객체가 여전히 존재하는지 확인
                     if (!itemGraphic || !itemGraphic.scene) return;
-        
+
                     // 서서히 검정색으로 변하는 효과
                     this.tweens.add({
                         targets: itemGraphic,
@@ -3172,18 +2941,18 @@ class GameScene extends Phaser.Scene {
                             // 검정색 변환 완료 후 검정 오브젝트 이미지로 교체 (선택사항)
                             const itemData = this.currentTrashItemData;
                             let blackImageKey;
-        
+
                             if (this.currentGameType === 2 && isCorrect) {
                                 blackImageKey = `${itemData.id}_preprocessed_black_img`;
                             } else {
                                 blackImageKey = `${itemData.id}_black_img`;
                             }
-        
+
                             if (this.textures.exists(blackImageKey)) {
                                 itemGraphic.setTexture(blackImageKey);
                                 itemGraphic.clearTint(); // 틴트 제거하고 원본 검정 이미지 사용
                             }
-        
+
                             // 서서히 사라지는 효과
                             this.tweens.add({
                                 targets: itemGraphic,
@@ -3350,8 +3119,6 @@ class GameScene extends Phaser.Scene {
     }
 
 
-
-
     hideResultUIAndProceed() {
         console.log('GameScene: 결과 UI 숨김 및 다음 진행.');
 
@@ -3380,14 +3147,20 @@ class GameScene extends Phaser.Scene {
 
     hideResultUI() {
         console.log('GameScene: 결과 UI 숨김.');
-        if (this.resultButton) { this.resultButton.setVisible(false); }
-        if (this.resultButtonText) { this.resultButtonText.setVisible(false); }
+        if (this.resultButton) {
+            this.resultButton.setVisible(false);
+        }
+        if (this.resultButtonText) {
+            this.resultButtonText.setVisible(false);
+        }
         this.isProcessingResult = false;
     }
 
     setGameInputEnabled(enabled) {
         console.log('GameScene: 게임 입력 상태 변경 -', enabled ? '활성화' : '비활성화');
-        if (this.input && this.input.keyboard) { this.input.keyboard.enabled = enabled; }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.enabled = enabled;
+        }
         if (this.commandButtons.left) {
             this.commandButtons.left.setInteractive(enabled);
             this.commandButtons.down.setInteractive(enabled);
@@ -3623,10 +3396,18 @@ class GameScene extends Phaser.Scene {
         this.switchGameTypeUI(this.currentGameType);
 
         // UI 오브젝트 초기화
-        if (this.scoreText) { this.scoreText.setText(this.score); }
-        if (this.levelText) { this.levelText.setText(this.level); }
-        if (this.roundText) { this.roundText.setText(this.currentRound); }
-        if (this.timeText) { this.timeText.setText(this.itemTimeLimit); }
+        if (this.scoreText) {
+            this.scoreText.setText(this.score);
+        }
+        if (this.levelText) {
+            this.levelText.setText(this.level);
+        }
+        if (this.roundText) {
+            this.roundText.setText(this.currentRound);
+        }
+        if (this.timeText) {
+            this.timeText.setText(this.itemTimeLimit);
+        }
 
         // 하트 UI 업데이트
         if (this.heartGraphics.length > 0) {
@@ -3663,7 +3444,7 @@ class GameScene extends Phaser.Scene {
         }
 
         // 원래 updateBinVisuals의 로직을 참고하여 리셋
-        const closedBinSize = { width: 50, height: 34 };
+        const closedBinSize = {width: 50, height: 34};
         const closedBinY = 581;
 
         this.binImages.forEach((bin, index) => {
@@ -3694,9 +3475,6 @@ class GameScene extends Phaser.Scene {
 
         console.log('모든 쓰레기통 리셋 완료');
     }
-
-
-
 
 
     // GameScene 클래스에 shutdown 함수 추가
@@ -3776,37 +3554,4 @@ class GameScene extends Phaser.Scene {
     }
 }
 
-// 게임 설정 (config)
-const config = {
-    type: Phaser.AUTO,
-    parent: 'game-container',
-    width: 440,
-    height: 956,
-    backgroundColor: '#3cbb89',
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        // 최소 크기 설정 (선택 사항)
-        min: {
-            width: 220,
-            height: 478
-        },
-        // 최대 크기 설정 (선택 사항)
-        max: {
-            width: 440,
-            height: 956
-        }
-    },
-    // 터치 캡처 비활성화 추가
-    input: {
-        touch: {
-            capture: false
-        }
-    },
-    scene: [
-        BootScene,
-        GameScene
-    ]
-};
-
-const game = new Phaser.Game(config);
+export default GameScene
