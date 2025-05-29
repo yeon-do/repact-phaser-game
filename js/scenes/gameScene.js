@@ -1,6 +1,6 @@
 import {rules} from "../rules/wasteRules.js";
-import {updateType1} from "../handlers/type1Handler.js";
-import {updateType3} from "../handlers/type3Handler.js";
+import {Type1Handler} from "../gameSceneHandlers/type1Handler.js";
+import {Type3Handler} from "../gameSceneHandlers/type3Handler.js";
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -118,8 +118,8 @@ class GameScene extends Phaser.Scene {
         this.resultButtonText = null;
         this.lastResultIsCorrect = false;
 
-        this.updateType1 = updateType1.bind(this);
-        this.updateType3 = updateType3.bind(this);
+        this.type1Handler = new Type1Handler(this);
+        this.type3Handler = new Type3Handler(this);
     }
 
     preload() {
@@ -872,17 +872,17 @@ class GameScene extends Phaser.Scene {
         // 게임 타입별 업데이트
         switch (this.currentGameType) {
             case 1:
-                this.updateType1(time, delta);
+                this.type1Handler.update(time, delta);
                 break;
             case 2:
                 if (this.gameState === 'preprocessing') {
                     this.updateType2Preprocessing();
                 } else {
-                    this.updateType1(time, delta); // Type 2는 기본적으로 Type 1과 같음
+                    this.type1Handler.update(time, delta); // Type 2는 기본적으로 Type 1과 같음
                 }
                 break;
             case 3:
-                this.updateType3(time, delta);
+                this.type3Handler.update(time, delta);
                 break;
         }
     }
