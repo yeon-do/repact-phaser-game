@@ -1261,18 +1261,18 @@ class GameScene extends Phaser.Scene {
 
 
     // 충돌 처리 함수 추가
-    handleType3Collision() {
-        if (!this.isFalling || this.isProcessingResult) return;
-
-        this.isFalling = false;
-        this.isProcessingResult = true;
-
-        // 정답 확인
-        const isCorrect = (this.currentLaneIndex === 0 && this.currentTrashItemGraphic.itemData.correctAnswer === 'left') ||
-            (this.currentLaneIndex === 1 && this.currentTrashItemGraphic.itemData.correctAnswer === 'right');
-
-        this.triggerResultState(this.currentLaneIndex, 'collision', isCorrect);
-    }
+    // handleType3Collision() {
+    //     if (!this.isFalling || this.isProcessingResult) return;
+    //
+    //     this.isFalling = false;
+    //     this.isProcessingResult = true;
+    //
+    //     // 정답 확인
+    //     const isCorrect = (this.currentLaneIndex === 0 && this.currentTrashItemGraphic.itemData.correctAnswer === 'left') ||
+    //         (this.currentLaneIndex === 1 && this.currentTrashItemGraphic.itemData.correctAnswer === 'right');
+    //
+    //     this.triggerResultState(this.currentLaneIndex, 'collision', isCorrect);
+    // }
 
 
     cleanupType3UI() {
@@ -2607,100 +2607,7 @@ class GameScene extends Phaser.Scene {
         console.log('GameScene: 칸 이동 ->', this.currentLaneIndex);
     }
 
-    triggerResultState(itemLaneIndex, reason = 'incorrect') {
-        console.log('GameScene: 결과 상태 트리거 시작! 이유:', reason, '게임타입:', this.currentGameType);
 
-        if (!this.currentTrashItemGraphic) {
-            console.log('GameScene: 처리할 아이템이 없습니다.');
-            return;
-        }
-
-        this.currentTrashItemGraphic.setActive(false);
-        this.lastLandedLaneIndex = (itemLaneIndex !== null) ? itemLaneIndex : this.currentLaneIndex;
-
-        let isCorrect = false;
-        const itemData = this.currentTrashItemData;
-        let message = '';
-
-        // Type 3 퀴즈 판정
-        if (this.currentGameType === 3) {
-            // 왼쪽(0)이 정답인지, 오른쪽(1)이 정답인지 확인
-            const correctLane = itemData.correctAnswer === 'left' ? 0 : 1;
-            isCorrect = (this.currentLaneIndex === correctLane);
-            message = isCorrect ? itemData.messageCorrect : itemData.messageIncorrect;
-        }
-        // 기존 Type 1/2 판정
-        else if (reason === 'collision') {
-            let landedBinKey = null;
-            if (itemLaneIndex !== null && itemLaneIndex >= 0 && itemLaneIndex < this.binKeys.length) {
-                landedBinKey = this.binKeys[itemLaneIndex];
-            }
-            isCorrect = (landedBinKey !== null && itemData.correctBin === landedBinKey);
-            message = isCorrect ? itemData.messageCorrect : itemData.messageIncorrect;
-        } else if (reason === 'floor') {
-            isCorrect = false;
-            message = itemData.messageIncorrect;
-        } else if (reason === 'correct') {
-            isCorrect = true;
-            message = itemData.messageCorrect;
-        } else if (reason === 'incorrect') {
-            isCorrect = false;
-            message = itemData.messageIncorrect;
-        }
-        this.lastResultIsCorrect = isCorrect;
-
-        // 라인 색상 변경
-        this.updateLineColor(isCorrect);
-
-        // 아이템 충돌 효과 표시
-        this.showItemCollisionEffect(isCorrect);
-
-        // 메시지 표시
-        if (this.messageTextObject) {
-            this.messageTextObject.setText(message);
-        }
-
-        // 오답 시 체력 감소
-        if (!isCorrect) {
-            console.log('GameScene: 오답 처리 플로우 (체력 감소 등).');
-            this.health--;
-            this.updateHealthUI();
-
-            // 게임 오버 조건 판단
-            if (this.health <= 0) {
-                console.log('GameScene: 체력 0! 게임 오버.');
-                this.gameOver();
-                return;
-            }
-
-            // 아이템에 적용된 모든 트윈 중지
-            if (this.currentTrashItemGraphic) {
-                this.tweens.killTweensOf(this.currentTrashItemGraphic);
-
-                // 애니메이션이 있다면 중지
-                if (this.currentTrashItemGraphic.anims) {
-                    this.currentTrashItemGraphic.anims.stop();
-                }
-            }
-
-            // 약간의 딜레이 후 오답 팝업 표시
-            this.time.delayedCall(800, () => {
-                this.showIncorrectPopup();
-            });
-        } else {
-            /// 정답일 때는 아이템 사라짐 애니메이션 적용
-            this.showItemCollisionEffect(isCorrect);
-
-            // 자동으로 다음 라운드로 진행
-            this.time.delayedCall(this.ANIMATION_TIMING.NEXT_ROUND_DELAY, () => {
-                // 이미 처리되었는지 확인
-                if (this.isProcessingResult) {
-                    this.handleResult(isCorrect);
-                    this.proceedToNextRound();
-                }
-            }, [], this);
-        }
-    }
 
     // 라인 색상 변경 함수
     updateLineColor(isCorrect) {
