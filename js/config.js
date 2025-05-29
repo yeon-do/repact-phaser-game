@@ -1,5 +1,5 @@
 import BootScene from './scenes/BootScene.js';
-import GameScene from './scenes/GameScene.js';
+import GameScene from './scenes/gamescene/gameScene.js';
 
 // 게임 설정 (config)
 const config = {
