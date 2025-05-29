@@ -80,7 +80,7 @@ class LoginScene extends Phaser.Scene {
         .setInteractive();
 
         // 버튼 이벤트
-        loginButton.on('pointerdown', () => {
+        loginButton.on('pointerdown', async () => {
             // 로그인 유효성 검사
             const id = idText.text;
             const pw = pwText.text;
@@ -90,8 +90,20 @@ class LoginScene extends Phaser.Scene {
                 return;
             }
             
-            // TODO: 실제 로그인 처리
-            this.scene.start('BootScene');
+            try {
+                const response = await this.loginRequest(id, pw);
+                if (response.success) {
+                    // 로그인 성공 시 토큰 저장
+                    localStorage.setItem('userToken', response.token);
+                    // BootScene으로 이동
+                    this.scene.start('BootScene');
+                } else {
+                    alert(response.message || '로그인에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('로그인 에러:', error);
+                alert('로그인 처리 중 오류가 발생했습니다.');
+            }
         });
 
         signupButton.on('pointerdown', () => {
@@ -185,5 +197,30 @@ class LoginScene extends Phaser.Scene {
                 document.body.removeChild(input);
             });
         });
+    }
+
+    // LoginScene 클래스 내에 로그인 요청 메서드 추가(주소변경해야 합니당)
+    async loginRequest(id, password) {
+        try {
+            const response = await fetch('http://your-backend-url/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: id,
+                    password: password
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Login request failed:', error);
+            throw error;
+        }
     }
 }
