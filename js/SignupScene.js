@@ -17,7 +17,7 @@ class SignupScene extends Phaser.Scene {
             .setDisplaySize(width, height);
 
         // 제목
-        this.add.text(width / 2, height * 0.2, '회원가입', {
+        this.add.text(width / 2, height * 0.15, '회원가입', {
             font: '32px "머니그라피"',
             fill: '#ffffff',
             align: 'center'
@@ -26,85 +26,74 @@ class SignupScene extends Phaser.Scene {
         // 입력 필드 설정
         const inputBgWidth = 360;
         const inputBgHeight = 50;
-        const inputY = height * 0.51; // 
+        const inputY = height * 0.3; // 시작 위치를 위로 조정
         const inputSpacing = 60;
 
-        // ID 입력
-        const idBg = this.add.image(width / 2, inputY, 'signup_white_bar')
+        // 이름 입력
+        const nameBg = this.add.image(width / 2, inputY, 'signup_white_bar')
             .setDisplaySize(360, 50)
             .setInteractive();
-        const idText = this.add.text(width / 2, inputY, 'ID를 입력하세요', {
+        const nameText = this.add.text(width / 2, inputY, '이름을 입력하세요', {
+            font: '20px "머니그라피"',
+            fill: '#666666'
+        }).setOrigin(0.5);
+
+        // ID 입력 (username을 id로 변경)
+        const idBg = this.add.image(width / 2, inputY + inputSpacing, 'signup_white_bar')
+            .setDisplaySize(360, 50)
+            .setInteractive();
+        const idText = this.add.text(width / 2, inputY + inputSpacing, 'ID를 입력하세요', {
             font: '20px "머니그라피"',
             fill: '#666666'
         }).setOrigin(0.5);
 
         // 비밀번호 입력
-        const pwBg = this.add.image(width / 2, inputY + inputSpacing, 'signup_white_bar')
+        const pwBg = this.add.image(width / 2, inputY + inputSpacing * 2, 'signup_white_bar')
             .setDisplaySize(360, 50)
             .setInteractive();
-        const pwText = this.add.text(width / 2, inputY + inputSpacing, '비밀번호를 입력하세요', {
+        const pwText = this.add.text(width / 2, inputY + inputSpacing * 2, '비밀번호를 입력하세요', {
             font: '20px "머니그라피"',
             fill: '#666666'
         }).setOrigin(0.5);
 
-        // 비밀번호 확인
-        const pwConfirmBg = this.add.image(width / 2, inputY + inputSpacing * 2, 'signup_white_bar')
+        // 전화번호 입력
+        const phoneBg = this.add.image(width / 2, inputY + inputSpacing * 3, 'signup_white_bar')
             .setDisplaySize(360, 50)
             .setInteractive();
-        const pwConfirmText = this.add.text(width / 2, inputY + inputSpacing * 2, '비밀번호 확인', {
+        const phoneText = this.add.text(width / 2, inputY + inputSpacing * 3, '전화번호를 입력하세요', {
             font: '20px "머니그라피"',
             fill: '#666666'
         }).setOrigin(0.5);
 
-        // 커서 깜빡임 효과
-        const cursor = this.add.text(0, 0, '|', { 
+        // 이메일 입력
+        const emailBg = this.add.image(width / 2, inputY + inputSpacing * 4, 'signup_white_bar')
+            .setDisplaySize(360, 50)
+            .setInteractive();
+        const emailText = this.add.text(width / 2, inputY + inputSpacing * 4, '이메일을 입력하세요', {
             font: '20px "머니그라피"',
             fill: '#666666'
-        }).setVisible(false).setOrigin(0.5);
+        }).setOrigin(0.5);
 
-        this.tweens.add({
-            targets: cursor,
-            alpha: 0,
-            duration: 500,
-            yoyo: true,
-            repeat: -1
-        });
+        // 입력 필드 이벤트 설정
+        this.setupInputField(nameBg, nameText, 'text');
+        this.setupInputField(idBg, idText, 'text');  // username을 id로 변경
+        this.setupInputField(pwBg, pwText, 'password');
+        this.setupInputField(phoneBg, phoneText, 'tel');
+        this.setupInputField(emailBg, emailText, 'email');
 
-        // 활성화된 입력 필드 추적
-        this.activeInput = null;
-
-        // 입력 필드 클릭 이벤트 확장
-        const setupInputFieldFocus = (bg, text, defaultText) => {
-            bg.on('pointerdown', () => {
-            // 이전 커서 위치 초기화
-            if (this.activeInput) {
-                this.activeInput.text.setText(this.activeInput.text.text || this.activeInput.defaultText);
-            }
-            cursor.setVisible(true);
-            text.setText('');
-            // 텍스트의 중앙에 커서 위치
-            cursor.setPosition(text.x, text.y);
-            this.activeInput = { text, defaultText };
-            });
-        };
-
-        setupInputFieldFocus(idBg, idText, 'ID를 입력하세요');
-        setupInputFieldFocus(pwBg, pwText, '비밀번호를 입력하세요');
-        setupInputFieldFocus(pwConfirmBg, pwConfirmText, '비밀번호 확인');
-
-        // 가입하기 버튼
-        const signupButton = this.add.image(width / 2, height * 0.7, 'signup_white_bar')
+        // 가입하기 버튼 위치 조정
+        const signupButton = this.add.image(width / 2, inputY + inputSpacing * 5 + 20, 'signup_white_bar')
             .setDisplaySize(200, 50)
             .setInteractive();
-        
-        this.add.text(width / 2, height * 0.7, '가입하기', {
+
+        this.add.text(width / 2, inputY + inputSpacing * 5 + 20, '가입하기', {
             font: '24px "머니그라피"',
             fill: '#3cbb89',
             align: 'center'
         }).setOrigin(0.5);
 
-        // 뒤로가기 버튼
-        const backButton = this.add.text(width / 2, height * 0.8, '로그인으로 돌아가기', {
+        // 뒤로가기 버튼 위치 조정
+        const backButton = this.add.text(width / 2, inputY + inputSpacing * 5 + 80, '로그인으로 돌아가기', {
             font: '20px "머니그라피"',
             fill: '#ffffff',
             align: 'center'
@@ -112,36 +101,39 @@ class SignupScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive();
 
-        // 입력 필드 이벤트
-        this.setupInputField(idBg, idText, 'text');
-        this.setupInputField(pwBg, pwText, 'password');
-        this.setupInputField(pwConfirmBg, pwConfirmText, 'password');
-
-        // 버튼 이벤트
+        // 가입하기 버튼 이벤트
         signupButton.on('pointerdown', async () => {
             // 입력값 가져오기
-            const id = idText.text;
+            const name = nameText.text;
+            const id = idText.text;  // username을 id로 변경
             const password = pwText.text;
-            const confirmPassword = pwConfirmText.text;
+            const phone = phoneText.text;
+            const email = emailText.text;
 
             // 입력값 검증
-            if (id === 'ID를 입력하세요' || !id) {
+            if (name === '이름을 입력하세요' || !name) {
+                alert('이름을 입력해주세요.');
+                return;
+            }
+            if (id === 'ID를 입력하세요' || !id) {  // username을 id로 변경
                 alert('ID를 입력해주세요.');
                 return;
             }
-
             if (password === '비밀번호를 입력하세요' || !password) {
                 alert('비밀번호를 입력해주세요.');
                 return;
             }
-
-            if (password !== confirmPassword) {
-                alert('비밀번호가 일치하지 않습니다.');
+            if (phone === '전화번호를 입력하세요' || !phone) {
+                alert('전화번호를 입력해주세요.');
+                return;
+            }
+            if (email === '이메일을 입력하세요' || !email) {
+                alert('이메일을 입력해주세요.');
                 return;
             }
 
             try {
-                const response = await this.signupRequest(id, password);
+                const response = await this.signupRequest(name, id, password, phone, email);  // username을 id로 변경
                 if (response.success) {
                     alert('회원가입이 완료되었습니다.');
                     this.scene.start('LoginScene');
@@ -177,17 +169,20 @@ class SignupScene extends Phaser.Scene {
         });
     }
 
-    // SignupScene 클래스 내에 회원가입 요청 메서드 추가(주소 변경해야합니당)
-    async signupRequest(id, password) {
+    // signup 요청 메서드 수정
+    async signupRequest(name, id, password, phone, email) {  // username을 id로 변경
         try {
-            const response = await fetch('http://your-backend-url/api/signup', { 
+            const response = await fetch('http://your-backend-url/api/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    username: id,
-                    password: password
+                    name,
+                    id,  // username을 id로 변경
+                    password,
+                    phone,
+                    email
                 })
             });
 
