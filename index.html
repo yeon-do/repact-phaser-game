@@ -76,6 +76,15 @@
             left: -100px;
             visibility: hidden;
         }
+
+        .some-element {
+            -webkit-user-select: none;
+            /* Safari */
+            -ms-user-select: none;
+            /* IE 10+ and Edge */
+            user-select: none;
+            /* 표준 문법 */
+        }
     </style>
 </head>
 
@@ -83,10 +92,16 @@
     <div id="game-container"></div>
     <div class="fontPreload">.</div>
 
+    <!-- Phaser 라이브러리 먼저 로드 -->
     <script src="js/libraries/phaser.min.js"></script>
+    
+    <!-- 게임 씬들을 순서대로 로드 -->
+    <script src="js/BootScene.js"></script>
     <script src="js/LoginScene.js"></script>
     <script src="js/SignupScene.js"></script>
-    <script src="js/BootScene.js"></script>
+    <script src="js/HowToPlayScene.js"></script>
+    
+    <!-- 메인 게임 파일은 마지막에 로드 -->
     <script src="js/GAMEUP.js"></script>
     
     <!-- 전체화면 스크립트 -->
