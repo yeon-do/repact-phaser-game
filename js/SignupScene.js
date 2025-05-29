@@ -118,13 +118,40 @@ class SignupScene extends Phaser.Scene {
         this.setupInputField(pwConfirmBg, pwConfirmText, 'password');
 
         // 버튼 이벤트
-        signupButton.on('pointerdown', () => {
-            // TODO: 회원가입 처리
-            if (pwText.text !== pwConfirmText.text) {
+        signupButton.on('pointerdown', async () => {
+            // 입력값 가져오기
+            const id = idText.text;
+            const password = pwText.text;
+            const confirmPassword = pwConfirmText.text;
+
+            // 입력값 검증
+            if (id === 'ID를 입력하세요' || !id) {
+                alert('ID를 입력해주세요.');
+                return;
+            }
+
+            if (password === '비밀번호를 입력하세요' || !password) {
+                alert('비밀번호를 입력해주세요.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
                 alert('비밀번호가 일치하지 않습니다.');
                 return;
             }
-            this.scene.start('LoginScene');
+
+            try {
+                const response = await this.signupRequest(id, password);
+                if (response.success) {
+                    alert('회원가입이 완료되었습니다.');
+                    this.scene.start('LoginScene');
+                } else {
+                    alert(response.message || '회원가입에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('회원가입 에러:', error);
+                alert('회원가입 처리 중 오류가 발생했습니다.');
+            }
         });
 
         backButton.on('pointerdown', () => {
@@ -148,5 +175,31 @@ class SignupScene extends Phaser.Scene {
                 }
             });
         });
+    }
+
+    // SignupScene 클래스 내에 회원가입 요청 메서드 추가(주소 변경해야합니당)
+    async signupRequest(id, password) {
+        try {
+            const response = await fetch('http://your-backend-url/api/signup', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: id,
+                    password: password
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Network response was not ok');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Signup request failed:', error);
+            throw error;
+        }
     }
 }
