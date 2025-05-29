@@ -63,7 +63,7 @@ export class Type3Handler {
             const isCorrect = (this.scene.currentLaneIndex === 0 && this.scene.currentTrashItemGraphic.itemData.correctAnswer === 'left') ||
                 (this.scene.currentLaneIndex === 1 && this.scene.currentTrashItemGraphic.itemData.correctAnswer === 'right');
 
-            this.trigger.triggerResultState(this.scene.currentLaneIndex, 'collision', isCorrect);
+            this.trigger.resultState(this.scene.currentLaneIndex, 'collision', isCorrect);
         }
 
         // 화면 밖으로 떨어졌을 때 처리 - 더 넓은 범위로 설정
@@ -71,7 +71,7 @@ export class Type3Handler {
             console.log('GameScene: 화면 밖으로 떨어짐, y:', this.scene.currentTrashItemGraphic.y);
             this.scene.isFalling = false;
             this.scene.isProcessingResult = true;
-            this.trigger.triggerResultState(null, 'floor');
+            this.trigger.resultState(null, 'floor');
         }
     }
 }

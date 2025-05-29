@@ -65,7 +65,7 @@ export class Type1Handler {
         if (this.scene.cursors.left.isDown || this.scene.moveLeft || this.scene.cursors.right.isDown || this.scene.moveRight) {
             if (currentTime - this.scene.lastKeyboardMoveTime > this.scene.keyboardMoveDelay) {
                 const direction = (this.scene.cursors.left.isDown || this.scene.moveLeft) ? -1 : 1;
-                this.scene.moveLaneHorizontal(direction);
+                this.moveLaneHorizontal(direction);
                 this.scene.lastKeyboardMoveTime = currentTime;
             }
         } else {
@@ -128,7 +128,7 @@ export class Type1Handler {
             } else {
                 // Type 1 아이템이거나 전처리 완료된 Type 2 아이템은 결과 처리
                 this.scene.isProcessingResult = true;
-                this.trigger.triggerResultState(this.scene.currentLaneIndex, 'collision');
+                this.trigger.resultState(this.scene.currentLaneIndex, 'collision');
             }
         }
 
@@ -137,7 +137,51 @@ export class Type1Handler {
             console.log('GameScene: 화면 밖으로 떨어짐');
             this.scene.isFalling = false;
             this.scene.isProcessingResult = true;
-            this.trigger.triggerResultState(null, 'floor');
+            this.trigger.resultState(null, 'floor');
         }
+    }
+
+    moveLaneHorizontal(direction) {
+        if (!this.scene.currentTrashItemGraphic || !this.scene.isFalling) return;
+
+        const {width} = this.scene.sys.game.canvas;
+
+        if (this.scene.currentGameType === 3) {
+            // Type 3는 왼쪽(0)과 오른쪽(1)만 있음
+            const newLaneIndex = direction === -1 ? 0 : 1;
+            this.scene.currentLaneIndex = newLaneIndex;
+
+            // 패널 위치에 맞게 x좌표 설정
+            const targetX = newLaneIndex === 0 ?
+                width / 2 - this.scene.panel.width * 0.8 / 4 :
+                width / 2 + this.scene.panel.width * 0.8 / 4;
+
+            this.scene.currentTrashItemGraphic.x = targetX;
+            console.log('GameScene: Type 3 선택지 이동 ->', this.scene.currentLaneIndex);
+            return;
+        }
+
+        // 기존 Type 1/2 로직
+        const numberOfBins = this.scene.binKeys.length;
+        let nextLaneIndex = this.scene.currentLaneIndex + direction;
+
+        if (nextLaneIndex < 0 || nextLaneIndex >= numberOfBins) {
+            console.log('GameScene: 경계입니다.');
+            return;
+        }
+
+        this.scene.currentLaneIndex = nextLaneIndex;
+        const targetX = this.scene.laneCenterXPositions[this.scene.currentLaneIndex];
+        this.scene.currentTrashItemGraphic.x = targetX;
+
+        // '터치!' 텍스트도 함께 이동 (TYPE2 아이템인 경우)
+        if (this.scene.currentGameType === 2 && this.scene.touchText) {
+            this.scene.touchText.x = targetX + this.scene.currentTrashItemGraphic.displayWidth / 2;
+        }
+
+        // 쓰레기통 이미지 업데이트
+        this.scene.updateBinVisuals(this.scene.currentLaneIndex);
+
+        console.log('GameScene: 칸 이동 ->', this.scene.currentLaneIndex);
     }
 }
