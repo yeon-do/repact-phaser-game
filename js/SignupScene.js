@@ -74,12 +74,12 @@ class SignupScene extends Phaser.Scene {
             fill: '#666666'
         }).setOrigin(0.5);
 
-        // 입력 필드 이벤트 설정
-        this.setupInputField(nameBg, nameText, 'text');
-        this.setupInputField(idBg, idText, 'text');  // username을 id로 변경
-        this.setupInputField(pwBg, pwText, 'password');
-        this.setupInputField(phoneBg, phoneText, 'tel');
-        this.setupInputField(emailBg, emailText, 'email');
+        // 입력 필드 이벤트 설정 수정
+        this.setupInputField(nameBg, nameText, 'name');    // 이름 입력
+        this.setupInputField(idBg, idText, 'text');        // ID 입력
+        this.setupInputField(pwBg, pwText, 'password');    // 비밀번호 입력
+        this.setupInputField(phoneBg, phoneText, 'tel');   // 전화번호 입력
+        this.setupInputField(emailBg, emailText, 'email'); // 이메일 입력
 
         // 가입하기 버튼 위치 조정
         const signupButton = this.add.image(width / 2, inputY + inputSpacing * 5 + 20, 'signup_white_bar')
@@ -152,20 +152,97 @@ class SignupScene extends Phaser.Scene {
     }
 
     setupInputField(bg, text, type) {
-        bg.on('pointerdown', () => {
-            const input = document.createElement('input');
-            input.type = type;
-            input.style.position = 'fixed';
-            input.style.opacity = '0';
-            document.body.appendChild(input);
-            input.focus();
-            input.addEventListener('input', (e) => {
+        let currentValue = '';
+        const defaultText = text.text;
+        let isInputActive = false;
+        let cursorBlink;
+        let inputElement = null;
+
+        const startInput = () => {
+            isInputActive = true;
+            
+            // 기존 input 요소가 있다면 제거
+            if (inputElement) {
+                inputElement.remove();
+            }
+
+            // 숨겨진 input 요소 생성
+            inputElement = document.createElement('input');
+            inputElement.type = type;
+            inputElement.style.position = 'absolute';
+            inputElement.style.opacity = '0';
+            inputElement.style.pointerEvents = 'none';
+            inputElement.style.zIndex = '-1000';
+            inputElement.value = currentValue;
+            document.body.appendChild(inputElement);
+            inputElement.focus();
+
+            if (text.text === defaultText) {
+                currentValue = '';
+                text.setText('|');
+            }
+
+            // 기존 깜빡임 타이머가 있다면 제거
+            if (cursorBlink) cursorBlink.destroy();
+
+            // 커서 깜빡임 효과
+            cursorBlink = this.time.addEvent({
+                delay: 500,
+                callback: () => {
+                    if (text.text.endsWith('|')) {
+                        text.setText(currentValue);
+                    } else {
+                        text.setText(currentValue + '|');
+                    }
+                },
+                loop: true
+            });
+
+            // input 이벤트 리스너 추가
+            inputElement.addEventListener('input', (e) => {
+                currentValue = e.target.value;
                 if (type === 'password') {
-                    text.setText('*'.repeat(e.target.value.length) || '비밀번호를 입력하세요');
+                    text.setText('*'.repeat(currentValue.length) + '|');
                 } else {
-                    text.setText(e.target.value || 'ID를 입력하세요');
+                    text.setText(currentValue + '|');
                 }
             });
+
+            // Enter 키 처리
+            inputElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    endInput();
+                }
+            });
+        };
+
+        const endInput = () => {
+            isInputActive = false;
+            if (cursorBlink) {
+                cursorBlink.destroy();
+            }
+            if (currentValue === '') {
+                text.setText(defaultText);
+            } else {
+                text.setText(type === 'password' ? '*'.repeat(currentValue.length) : currentValue);
+            }
+            if (inputElement) {
+                inputElement.remove();
+                inputElement = null;
+            }
+        };
+
+        bg.on('pointerdown', () => {
+            if (!isInputActive) {
+                startInput();
+            }
+        });
+
+        // 다른 곳을 클릭했을 때 입력 종료
+        this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (isInputActive && !gameObjects.includes(bg)) {
+                endInput();
+            }
         });
     }
 
