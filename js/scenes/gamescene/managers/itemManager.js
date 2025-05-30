@@ -395,7 +395,7 @@ export class ItemManager {
             onComplete: () => {
                 console.log('GameScene: 팝업 배경 표시 완료');
                 // 배경 표시 완료 후 경고 슬라이드 애니메이션 시작
-                this.scene.showWarningSlideAnimation();
+                this.scene.miniGameManager.showWarningSlideAnimation();
             }
         });
     }
