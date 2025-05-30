@@ -154,14 +154,14 @@ export class CommandHandler {
                     onComplete: () => {
                         // 이미지가 완전히 사라진 후 다음 단계로
                         this.scene.time.delayedCall(500, () => {
-                            this.scene.startCleanupAnimation();
+                            this.scene.cleanupAnimationmManager.startCleanupAnimation();
                         });
                     }
                 });
             } else {
                 // 이미지가 없는 경우 바로 다음 단계로
                 this.scene.time.delayedCall(2000, () => {
-                    this.scene.startCleanupAnimation();
+                    this.scene.cleanupAnimationmManager.startCleanupAnimation();
                 });
             }
 
