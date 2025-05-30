@@ -171,10 +171,10 @@ export class UiManager{
             .on('pointerdown', () => this.scene.handleMenuButton());  // 클릭 이벤트 핸들러 추가
         this.scene.uiContainers.common.add(menuButton);
 
-        this.scene.createRoundsUI();
+        this.createRoundsUI();
 
         // 하트 UI (위에서 260px)
-        this.scene.createHeartsUI();
+        this.createHeartsUI();
 
         // 커맨드 버튼 생성
         this.createCommandButtons();
@@ -510,5 +510,55 @@ export class UiManager{
         this.scene.setGameInputEnabled(true);
 
         this.scene.resetCurrentRound();
+    }
+
+    createRoundsUI() {
+        // 라운드 UI 세팅 (위에서 258px, 첫 번째 원 왼쪽에서 74px)
+        const roundY = 260;
+        const firstRoundX = 80; // 첫 번째 원 X 위치
+        const roundSize = 15;   // 원 크기 (필요에 따라 조정)
+        const roundSpacing = 5; // 원 간 간격
+
+        this.scene.roundGraphics = [];
+
+        // 처음 원은 검정색, 나머지는 회색으로 초기화
+        for (let i = 0; i < this.scene.maxRounds; i++) {
+            const x = firstRoundX + (i * (roundSize + roundSpacing));
+
+            // 첫 번째 원(i=0)은 검정색, 나머지는 회색
+            const textureKey = (i === 0) ? 'round_black_img' : 'round_gray_img';
+
+            const roundImg = this.scene.add.image(x, roundY, textureKey)
+                .setDisplaySize(roundSize, roundSize)
+                .setOrigin(0, 0);
+
+            this.scene.roundGraphics.push(roundImg);
+            this.scene.uiContainers.common.add(roundImg);
+        }
+    }
+
+    createHeartsUI() {
+        // 목숨 하트 UI (위에서 260px, 첫 번째 하트 왼쪽에서 285px)
+
+        const heartY = 260;
+        const firstHeartX = 285; // 첫 번째 하트 X 위치
+        const heartWidth = 21;   // 정확한 하트 너비
+        const heartHeight = 18;  // 정확한 하트 높이
+        const heartSpacing = 6;  // 하트 간 간격
+
+        this.scene.heartGraphics = [];
+
+        // 왼쪽에서 오른쪽으로 하트 배치 (첫 번째 하트부터)
+        for (let i = 0; i < 3; i++) {
+            // i=0일 때 첫 번째 하트, 오른쪽으로 간격 추가
+            const x = firstHeartX + (i * (heartWidth + heartSpacing));
+
+            const heartImg = this.scene.add.image(x, heartY, 'heart_full_img')
+                .setDisplaySize(heartWidth, heartHeight) // 정확한 크기 설정
+                .setOrigin(0, 0);
+
+            this.scene.heartGraphics.push(heartImg);
+            this.scene.uiContainers.common.add(heartImg);
+        }
     }
 }

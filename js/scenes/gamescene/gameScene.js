@@ -215,57 +215,7 @@ class GameScene extends Phaser.Scene {
         // 메뉴 버튼 기능
         console.log('메뉴 버튼 클릭됨');
         // 예: 메뉴 팝업 표시
-        this.showMenu();
-    }
-
-    createHeartsUI() {
-        // 목숨 하트 UI (위에서 260px, 첫 번째 하트 왼쪽에서 285px)
-
-        const heartY = 260;
-        const firstHeartX = 285; // 첫 번째 하트 X 위치
-        const heartWidth = 21;   // 정확한 하트 너비
-        const heartHeight = 18;  // 정확한 하트 높이
-        const heartSpacing = 6;  // 하트 간 간격
-
-        this.heartGraphics = [];
-
-        // 왼쪽에서 오른쪽으로 하트 배치 (첫 번째 하트부터)
-        for (let i = 0; i < 3; i++) {
-            // i=0일 때 첫 번째 하트, 오른쪽으로 간격 추가
-            const x = firstHeartX + (i * (heartWidth + heartSpacing));
-
-            const heartImg = this.add.image(x, heartY, 'heart_full_img')
-                .setDisplaySize(heartWidth, heartHeight) // 정확한 크기 설정
-                .setOrigin(0, 0);
-
-            this.heartGraphics.push(heartImg);
-            this.uiContainers.common.add(heartImg);
-        }
-    }
-
-    createRoundsUI() {
-        // 라운드 UI 세팅 (위에서 258px, 첫 번째 원 왼쪽에서 74px)
-        const roundY = 260;
-        const firstRoundX = 80; // 첫 번째 원 X 위치
-        const roundSize = 15;   // 원 크기 (필요에 따라 조정)
-        const roundSpacing = 5; // 원 간 간격
-
-        this.roundGraphics = [];
-
-        // 처음 원은 검정색, 나머지는 회색으로 초기화
-        for (let i = 0; i < this.maxRounds; i++) {
-            const x = firstRoundX + (i * (roundSize + roundSpacing));
-
-            // 첫 번째 원(i=0)은 검정색, 나머지는 회색
-            const textureKey = (i === 0) ? 'round_black_img' : 'round_gray_img';
-
-            const roundImg = this.add.image(x, roundY, textureKey)
-                .setDisplaySize(roundSize, roundSize)
-                .setOrigin(0, 0);
-
-            this.roundGraphics.push(roundImg);
-            this.uiContainers.common.add(roundImg);
-        }
+        this.showMenu(); // todo 없는 함수?
     }
 
     setupInput() {
