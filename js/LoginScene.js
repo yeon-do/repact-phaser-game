@@ -1,6 +1,8 @@
 class LoginScene extends Phaser.Scene {
     constructor() {
         super('LoginScene');
+        this.id = null
+        this.pw = null
     }
 
     preload() {
@@ -82,8 +84,8 @@ class LoginScene extends Phaser.Scene {
         // 버튼 이벤트
         loginButton.on('pointerdown', async () => {
             // 로그인 유효성 검사
-            const id = idText.text;
-            const pw = pwText.text;
+            const id = this.id;
+            const pw = this.pw;
             
             if (id === 'ID를 입력하세요' || pw === '비밀번호를 입력하세요') {
                 alert('ID와 비밀번호를 입력해주세요');
@@ -149,6 +151,7 @@ class LoginScene extends Phaser.Scene {
                 if (!input.value) {
                     idText.setText('ID를 입력하세요');
                 } else {
+                    this.id = input.value
                     idText.setText(input.value);
                 }
                 document.body.removeChild(input);
@@ -192,6 +195,7 @@ class LoginScene extends Phaser.Scene {
                 if (!input.value) {
                     pwText.setText('비밀번호를 입력하세요');
                 } else {
+                    this.pw = input.value
                     pwText.setText('*'.repeat(input.value.length));
                 }
                 document.body.removeChild(input);
