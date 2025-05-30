@@ -323,7 +323,7 @@ export class UiManager{
             this.scene.moveLeft = true;
             this.scene.commandButtons.left.setTexture('button_left_pressed_img');
             if (this.scene.isProcessingResult) {
-                this.scene.handlePreprocessingCommand('left');
+                this.scene.commandHandler.handlePreprocessingCommand('left');
             }
         });
 
@@ -331,7 +331,7 @@ export class UiManager{
             this.scene.moveDownFast = true;
             this.scene.commandButtons.down.setTexture('button_down_pressed_img');
             if (this.scene.isProcessingResult) {
-                this.scene.handlePreprocessingCommand('down');
+                this.scene.commandHandler.handlePreprocessingCommand('down');
             }
         });
 
@@ -339,7 +339,7 @@ export class UiManager{
             this.scene.moveRight = true;
             this.scene.commandButtons.right.setTexture('button_right_pressed_img');
             if (this.scene.isProcessingResult) {
-                this.scene.handlePreprocessingCommand('right');
+                this.scene.commandHandler.handlePreprocessingCommand('right');
             }
         });
 

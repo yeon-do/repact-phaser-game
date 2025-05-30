@@ -119,7 +119,7 @@ export class Trigger {
 
         if (this.scene.currentRound >= this.scene.maxRounds) {
             // 레벨 완료
-            this.scene.completeLevel();
+            this.completeLevel();
         } else {
             // 다음 라운드
             this.scene.currentRound++;
@@ -137,8 +137,36 @@ export class Trigger {
             const nextRoundData = this.scene.roundData.find(round => round.round === this.scene.currentRound);
             console.log('GameScene: 다음 라운드 데이터:', nextRoundData);
 
-            this.scene.spawnWasteItem();
+            this.scene.itemManager.spawnWasteItem();
         }
+    }
+
+    completeLevel() {
+        console.log('GameScene: 레벨 완료!');
+
+        // 레벨 완료 메시지
+        if (this.scene.messageTextObject) {
+            this.scene.messageTextObject.setText('축하합니다!\n1레벨을 완료했습니다!');
+        }
+
+        // 결과 버튼
+        if (this.scene.resultButton) {
+            this.scene.resultButton.setFillStyle(0x00ff00);
+            this.scene.resultButton.setVisible(true);
+        }
+        if (this.scene.resultButtonText) {
+            this.scene.resultButtonText.setText('게임 완료');
+            this.scene.resultButtonText.setVisible(true);
+        }
+
+        // 완료 버튼 클릭 시 시작 화면으로
+        this.scene.resultButton.removeAllListeners('pointerdown');
+        this.scene.resultButton.on('pointerdown', () => {
+            this.scene.scene.stop('GameScene');
+            this.scene.scene.start('BootScene');
+        }, this.scene);
+
+        this.scene.setGameInputEnabled(false);
     }
 
     updateRoundsUI() {
