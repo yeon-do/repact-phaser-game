@@ -3,6 +3,7 @@ import {Type1Handler} from "./handlers/type1Handler.js";
 import {Type3Handler} from "./handlers/type3Handler.js";
 import {Preloader} from "./preloader/preloader.js";
 import {UiManager} from "./managers/uiManager.js";
+import {CommandHandler} from "./handlers/commandHandler.js";
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -122,6 +123,7 @@ class GameScene extends Phaser.Scene {
 
         this.type1Handler = new Type1Handler(this);
         this.type3Handler = new Type3Handler(this);
+        this.commandHandler = new CommandHandler(this);
     }
 
     preload() {
@@ -232,13 +234,13 @@ class GameScene extends Phaser.Scene {
             if (this.preprocessingInputEnabled) {
                 switch (event.keyCode) {
                     case Phaser.Input.Keyboard.KeyCodes.LEFT:
-                        this.handlePreprocessingCommand('left');
+                        this.commandHandler.handlePreprocessingCommand('left');
                         break;
                     case Phaser.Input.Keyboard.KeyCodes.DOWN:
-                        this.handlePreprocessingCommand('down');
+                        this.commandHandler.handlePreprocessingCommand('down');
                         break;
                     case Phaser.Input.Keyboard.KeyCodes.RIGHT:
-                        this.handlePreprocessingCommand('right');
+                        this.commandHandler.handlePreprocessingCommand('right');
                         break;
                 }
             }
@@ -1453,136 +1455,6 @@ class GameScene extends Phaser.Scene {
             }
         }*/
 
-    handlePreprocessingCommand(action) {
-        try {
-            // 활성화된 첫 번째 커맨드 키 찾기
-            const currentKeyIndex = this.commandKeyImages.findIndex(key => key.active);
-
-            if (currentKeyIndex === -1) {
-                console.log('활성화된 커맨드 키가 없음');
-                return;
-            }
-
-            const currentKey = this.commandKeyImages[currentKeyIndex];
-
-            // 액션 일치 확인
-            if (currentKey.action === action) {
-                console.log('올바른 키 입력:', action);
-
-                // 새로운 상황의 첫 번째 커맨드인지 확인
-                const isFirstCommandOfNewStep = currentKeyIndex === 0 ||
-                    (currentKeyIndex > 0 &&
-                        this.commandKeyImages[currentKeyIndex].stepIndex !==
-                        this.commandKeyImages[currentKeyIndex - 1].stepIndex);
-
-                // 새로운 상황 시작 시 이미지 변경
-                if (isFirstCommandOfNewStep) {
-                    this.updateItemImage(currentKey.stepIndex + 2);
-                    console.log(`새로운 상황 시작: "${currentKey.text}" - step${currentKey.stepIndex + 2} 이미지로 변경`);
-                }
-
-                // 마지막 커맨드인지 확인
-                const isLastCommand = currentKeyIndex === this.commandKeyImages.length - 1;
-
-                // 즉시 메시지 창 업데이트 (커맨드 키 누르는 순간)
-                this.updateMessageWithCommand();
-
-                // 키 이미지 날아가는 애니메이션 (동시에 시작)
-                this.tweens.add({
-                    targets: currentKey.image,
-                    y: currentKey.image.y - 50,
-                    alpha: 0,
-                    duration: 500,
-                    onComplete: () => {
-                        // 이미지 제거
-                        if (currentKey.image) {
-                            currentKey.image.destroy();
-                            currentKey.image = null;
-                        }
-
-                        // 다음 커맨드 키들 앞으로 당기기
-                        for (let i = currentKeyIndex + 1; i < this.commandKeyImages.length; i++) {
-                            const key = this.commandKeyImages[i];
-                            if (key.image) {
-                                this.tweens.add({
-                                    targets: key.image,
-                                    x: 240 + ((i - currentKeyIndex - 1) * 24),
-                                    duration: 300
-                                });
-                            }
-                        }
-
-                        // 현재 키 비활성화
-                        currentKey.active = false;
-
-                        // 상황 완료 여부 확인 후 텍스트 진하게 변경
-                        const remainingCommandsInStep = this.commandKeyImages.filter(key =>
-                            key.stepIndex === currentKey.stepIndex &&
-                            key.image &&
-                            !key.image.destroyed &&
-                            this.commandKeyImages.indexOf(key) > currentKeyIndex);
-
-                        if (remainingCommandsInStep.length === 0) {
-                            // 상황 완료 시 텍스트 진하게 변경
-                            this.updateMessageWithCommand();
-                            console.log(`상황 "${currentKey.text}" 완료 - 텍스트 진하게 변경`);
-                        }
-
-                        // 마지막 커맨드인 경우 특별 처리
-                        if (isLastCommand) {
-                            this.time.delayedCall(500, () => {
-                                this.updateToPreprocessedImage();
-
-                                this.time.delayedCall(1000, () => {
-                                    this.startCompletionSequence();
-                                });
-                            });
-                        } else {
-                            // 다음 키 활성화
-                            const nextKey = this.commandKeyImages[currentKeyIndex + 1];
-                            nextKey.active = true;
-
-                            // 다음 키 활성화 이미지로 변경
-                            if (nextKey.image) {
-                                let activeKeyImageKey;
-                                switch (nextKey.action) {
-                                    case 'left':
-                                        activeKeyImageKey = 'left_key_img';
-                                        break;
-                                    case 'down':
-                                        activeKeyImageKey = 'down_key_img';
-                                        break;
-                                    case 'right':
-                                        activeKeyImageKey = 'right_key_img';
-                                        break;
-                                    default:
-                                        activeKeyImageKey = 'down_key_img';
-                                }
-
-                                if (this.textures.exists(activeKeyImageKey)) {
-                                    nextKey.image.setTexture(activeKeyImageKey);
-                                    nextKey.image.setDisplaySize(40, 43);
-                                }
-                            }
-                        }
-                    }
-                });
-            } else {
-                // 잘못된 키 입력 - 흔들림 효과
-                if (currentKey.image) {
-                    this.tweens.add({
-                        targets: currentKey.image,
-                        x: currentKey.image.x + 5,
-                        duration: 50,
-                        yoyo: true,
-                        repeat: 3
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('커맨드 처리 중 오류:', error);
-        }
-    }
 
 
     updateToPreprocessedImage() {
@@ -2108,19 +1980,19 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    resetItemForRetry() {
-        console.log('GameScene: 같은 아이템으로 다시 출제.');
-        this.hideResultUI();
-
-        // 현재 게임 타입에 따라 다시 스폰
-        if (this.currentGameType === 1) {
-            this.spawnType1Item(this.currentTrashItemData);
-        } else if (this.currentGameType === 2) {
-            this.spawnType2Item(this.currentTrashItemData);
-        } else if (this.currentGameType === 3) {
-            this.spawnType3Item(this.currentTrashItemData);
-        }
-    }
+    // resetItemForRetry() {
+    //     console.log('GameScene: 같은 아이템으로 다시 출제.');
+    //     this.hideResultUI();
+    //
+    //     // 현재 게임 타입에 따라 다시 스폰
+    //     if (this.currentGameType === 1) {
+    //         this.spawnType1Item(this.currentTrashItemData);
+    //     } else if (this.currentGameType === 2) {
+    //         this.spawnType2Item(this.currentTrashItemData);
+    //     } else if (this.currentGameType === 3) {
+    //         this.spawnType3Item(this.currentTrashItemData);
+    //     }
+    // }
 
     // resetGameState 함수에서 첫 아이템 생성 부분 분리
     resetGameState() {
