@@ -1,4 +1,4 @@
-import {rules} from "../../rules/wasteRules.js";
+import {rules} from "./rules/wasteRules.js";
 import {Type1Handler} from "./handlers/type1Handler.js";
 import {Type3Handler} from "./handlers/type3Handler.js";
 import {Preloader} from "./preloader/preloader.js";
