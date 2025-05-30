@@ -4,6 +4,7 @@ import {Type3Handler} from "./handlers/type3Handler.js";
 import {Preloader} from "./preloader/preloader.js";
 import {UiManager} from "./managers/uiManager.js";
 import {CommandHandler} from "./handlers/commandHandler.js";
+import {Trigger} from "./handlers/trigger.js";
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -124,6 +125,7 @@ class GameScene extends Phaser.Scene {
         this.type1Handler = new Type1Handler(this);
         this.type3Handler = new Type3Handler(this);
         this.commandHandler = new CommandHandler(this);
+        this.trigger = new Trigger(this);
     }
 
     preload() {

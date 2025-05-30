@@ -1,9 +1,6 @@
-import {Trigger} from "./trigger.js";
-
 export class Type1Handler {
     constructor(scene) {
         this.scene = scene;
-        this.trigger = new Trigger(scene);
     }
 
     update(time, delta) {
@@ -128,7 +125,7 @@ export class Type1Handler {
             } else {
                 // Type 1 아이템이거나 전처리 완료된 Type 2 아이템은 결과 처리
                 this.scene.isProcessingResult = true;
-                this.trigger.resultState(this.scene.currentLaneIndex, 'collision');
+                this.scene.trigger.resultState(this.scene.currentLaneIndex, 'collision');
             }
         }
 
@@ -137,7 +134,7 @@ export class Type1Handler {
             console.log('GameScene: 화면 밖으로 떨어짐');
             this.scene.isFalling = false;
             this.scene.isProcessingResult = true;
-            this.trigger.resultState(null, 'floor');
+            this.scene.trigger.resultState(null, 'floor');
         }
     }
 

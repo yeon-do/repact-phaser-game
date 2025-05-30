@@ -282,7 +282,7 @@ export class Trigger {
         // 버튼 클릭 이벤트
         this.scene.retryButton.on('pointerdown', () => {
             // 모든 팝업 요소 제거
-            this.scene.hideIncorrectPopup();
+            this.hideIncorrectPopup();
 
             // 게임 상태 초기화 후 재시작
             this.scene.time.delayedCall(300, () => {
