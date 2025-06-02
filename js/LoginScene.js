@@ -1,8 +1,8 @@
 class LoginScene extends Phaser.Scene {
     constructor() {
         super('LoginScene');
-        this.id = ''
-        this.pw = ''
+        this.id = '';  // null 대신 빈 문자열로 초기화
+        this.pw = '';  // null 대신 빈 문자열로 초기화
     }
 
     preload() {
@@ -81,33 +81,35 @@ class LoginScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive();
 
-        // 버튼 이벤트
-        loginButton.on('pointerdown', async () => {
-            // 로그인 유효성 검사
-            const id = this.id;
-            const pw = this.pw;
-            
-            if (!id || !pw || id === '' || pw === '' || 
-                id === 'ID를 입력하세요' || pw === '비밀번호를 입력하세요') {
-                alert('ID와 비밀번호를 입력해주세요');
-                return;
-            }
-            
-            try {
-                const response = await this.loginRequest(id, pw);
-                if (response.success) {
-                    // 로그인 성공 시 토큰 저장
-                    localStorage.setItem('userToken', response.token);
-                    // BootScene으로 이동
-                    this.scene.start('BootScene');
-                } else {
-                    alert(response.message || '로그인에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('로그인 에러:', error);
-                alert('로그인 처리 중 오류가 발생했습니다.');
-            }
-        });
+
+loginButton.on('pointerdown', async () => {
+    try {
+        // 입력값이 기본 텍스트인지 확인
+        if (idText.text === 'ID를 입력하세요' || pwText.text === '비밀번호를 입력하세요') {
+            alert('ID와 비밀번호를 입력해주세요');
+            return;
+        }
+
+        // 입력값이 비어있는지 확인
+        if (!this.id || !this.pw || this.id.trim() === '' || this.pw.trim() === '') {
+            alert('ID와 비밀번호를 입력해주세요');
+            return;
+        }
+
+        const response = await this.loginRequest(this.id, this.pw);
+        
+        if (response && response.access_token) {
+            // 로그인 성공
+            localStorage.setItem('userToken', response.access_token);
+            this.scene.start('BootScene');
+        } else {
+            alert(response.message || '로그인에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('로그인 에러:', error);
+        alert(error.message || '로그인 처리 중 오류가 발생했습니다.');
+    }
+});
 
         signupButton.on('pointerdown', () => {
             // SignupScene으로 전환
@@ -116,9 +118,8 @@ class LoginScene extends Phaser.Scene {
 
         // 입력 필드 클릭 이벤트 
         idBg.on('pointerdown', () => {
-            // 클릭 시 기본 텍스트 제거
             if (idText.text === 'ID를 입력하세요') {
-                idText.setText('|');
+                idText.setText('');
             }
             
             const input = document.createElement('input');
@@ -149,21 +150,22 @@ class LoginScene extends Phaser.Scene {
             // 포커스 잃었을 때
             input.addEventListener('blur', () => {
                 cursorBlink.destroy();
-                if (!input.value || input.value.trim() === '') {
-                    this.id = '';  // 빈 문자열로 설정
-                    idText.setText('ID를 입력하세요');
+                const value = input.value.trim();
+                
+                if (!value) {
+                    this.id = '';  // 또는 this.pw = '';
+                    idText.setText('ID를 입력하세요');  // 또는 pwText.setText('비밀번호를 입력하세요');
                 } else {
-                    this.id = input.value.trim();  // 공백 제거
-                    idText.setText(this.id);
+                    this.id = value;  // 또는 this.pw = value;
+                    idText.setText(value);  // 또는 pwText.setText('*'.repeat(value.length));
                 }
                 document.body.removeChild(input);
             });
         });
 
         pwBg.on('pointerdown', () => {
-            // 클릭 시 기본 텍스트 제거
             if (pwText.text === '비밀번호를 입력하세요') {
-                pwText.setText('|');
+                pwText.setText('');
             }
 
             const input = document.createElement('input');
@@ -194,37 +196,49 @@ class LoginScene extends Phaser.Scene {
             // 포커스 잃었을 때
             input.addEventListener('blur', () => {
                 cursorBlink.destroy();
-                if (!input.value || input.value.trim() === '') {
-                    this.pw = '';  // 빈 문자열로 설정
+                const value = input.value.trim();
+                
+                if (!value) {
+                    this.pw = '';
                     pwText.setText('비밀번호를 입력하세요');
                 } else {
-                    this.pw = input.value.trim();  // 공백 제거
-                    pwText.setText('*'.repeat(this.pw.length));
+                    this.pw = value;
+                    pwText.setText('*'.repeat(value.length));
                 }
                 document.body.removeChild(input);
             });
         });
     }
 
-    // LoginScene 클래스 내에 로그인 요청 메서드 추가(주소변경해야 합니당)
-    async loginRequest(id, password) {
+ async loginRequest(id, password) {
         try {
-            const response = await fetch('http://your-backend-url/api/login', {
+            // 유효성 검사 추가
+            if (!id || !password || id.trim() === '' || password.trim() === '') {
+                throw new Error('ID와 비밀번호를 입력해주세요');
+            }
+
+            console.log("보내는 ID:", id);
+            console.log("보내는 Password:", password);
+
+            const response = await fetch('http://43.201.253.146:8000/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    username: id,
-                    password: password
+                    username: id.trim(),
+                    password: password.trim()
                 })
             });
 
+            const responseData = await response.json();
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(responseData.detail || '로그인에 실패했습니다');
             }
 
-            return await response.json();
+            console.log("받은 응답:", responseData);
+            return responseData;
         } catch (error) {
             console.error('Login request failed:', error);
             throw error;
