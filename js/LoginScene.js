@@ -1,8 +1,8 @@
 class LoginScene extends Phaser.Scene {
     constructor() {
         super('LoginScene');
-        this.id = null
-        this.pw = null
+        this.id = ''
+        this.pw = ''
     }
 
     preload() {
@@ -87,7 +87,8 @@ class LoginScene extends Phaser.Scene {
             const id = this.id;
             const pw = this.pw;
             
-            if (id === 'ID를 입력하세요' || pw === '비밀번호를 입력하세요') {
+            if (!id || !pw || id === '' || pw === '' || 
+                id === 'ID를 입력하세요' || pw === '비밀번호를 입력하세요') {
                 alert('ID와 비밀번호를 입력해주세요');
                 return;
             }
@@ -148,11 +149,12 @@ class LoginScene extends Phaser.Scene {
             // 포커스 잃었을 때
             input.addEventListener('blur', () => {
                 cursorBlink.destroy();
-                if (!input.value) {
+                if (!input.value || input.value.trim() === '') {
+                    this.id = '';  // 빈 문자열로 설정
                     idText.setText('ID를 입력하세요');
                 } else {
-                    this.id = input.value
-                    idText.setText(input.value);
+                    this.id = input.value.trim();  // 공백 제거
+                    idText.setText(this.id);
                 }
                 document.body.removeChild(input);
             });
@@ -192,11 +194,12 @@ class LoginScene extends Phaser.Scene {
             // 포커스 잃었을 때
             input.addEventListener('blur', () => {
                 cursorBlink.destroy();
-                if (!input.value) {
+                if (!input.value || input.value.trim() === '') {
+                    this.pw = '';  // 빈 문자열로 설정
                     pwText.setText('비밀번호를 입력하세요');
                 } else {
-                    this.pw = input.value
-                    pwText.setText('*'.repeat(input.value.length));
+                    this.pw = input.value.trim();  // 공백 제거
+                    pwText.setText('*'.repeat(this.pw.length));
                 }
                 document.body.removeChild(input);
             });
