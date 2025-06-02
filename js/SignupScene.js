@@ -39,10 +39,10 @@ class SignupScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // ID 입력 (username을 id로 변경)
-        const idBg = this.add.image(width / 2, inputY + inputSpacing, 'signup_white_bar')
+        const usernameBg = this.add.image(width / 2, inputY + inputSpacing, 'signup_white_bar')
             .setDisplaySize(360, 50)
             .setInteractive();
-        const idText = this.add.text(width / 2, inputY + inputSpacing, 'ID를 입력하세요', {
+        const usernameText = this.add.text(width / 2, inputY + inputSpacing, 'ID를 입력하세요', {
             font: '20px "머니그라피"',
             fill: '#666666'
         }).setOrigin(0.5);
@@ -76,7 +76,7 @@ class SignupScene extends Phaser.Scene {
 
         // 입력 필드 이벤트 설정 수정
         this.setupInputField(nameBg, nameText, 'name');    // 이름 입력
-        this.setupInputField(idBg, idText, 'text');        // ID 입력
+        this.setupInputField(usernameBg, usernameText, 'text');        // ID 입력
         this.setupInputField(pwBg, pwText, 'password');    // 비밀번호 입력
         this.setupInputField(phoneBg, phoneText, 'tel');   // 전화번호 입력
         this.setupInputField(emailBg, emailText, 'email'); // 이메일 입력
@@ -102,49 +102,46 @@ class SignupScene extends Phaser.Scene {
         .setInteractive();
 
         // 가입하기 버튼 이벤트
-        signupButton.on('pointerdown', async () => {
-            // 입력값 가져오기
-            const name = nameText.text;
-            const id = idText.text;  // username을 id로 변경
-            const password = pwText.text;
-            const phone = phoneText.text;
-            const email = emailText.text;
+ // 가입하기 버튼 이벤트
+signupButton.on('pointerdown', async () => {
+    const name = nameText.text;
+    const username = usernameText.text;
+    const password = this.passwordValue;  // ✅ 진짜 입력한 비밀번호
+    const phone = phoneText.text;
+    const email = emailText.text;
 
-            // 입력값 검증
-            if (name === '이름을 입력하세요' || !name) {
-                alert('이름을 입력해주세요.');
-                return;
-            }
-            if (id === 'ID를 입력하세요' || !id) {  // username을 id로 변경
-                alert('ID를 입력해주세요.');
-                return;
-            }
-            if (password === '비밀번호를 입력하세요' || !password) {
-                alert('비밀번호를 입력해주세요.');
-                return;
-            }
-            if (phone === '전화번호를 입력하세요' || !phone) {
-                alert('전화번호를 입력해주세요.');
-                return;
-            }
-            if (email === '이메일을 입력하세요' || !email) {
-                alert('이메일을 입력해주세요.');
-                return;
-            }
+    // 입력값 검증
+    if (name === '이름을 입력하세요' || !name) {
+        alert('이름을 입력해주세요.');
+        return;
+    }
+    if (username === 'ID를 입력하세요' || !username) {
+        alert('ID를 입력해주세요.');
+        return;
+    }
+    if (!password || password.length < 1) {  // ✅ 수정: 실제 값 검사
+        alert('비밀번호를 입력해주세요.');
+        return;
+    }
+    if (phone === '전화번호를 입력하세요' || !phone) {
+        alert('전화번호를 입력해주세요.');
+        return;
+    }
+    if (email === '이메일을 입력하세요' || !email) {
+        alert('이메일을 입력해주세요.');
+        return;
+    }
 
-            try {
-                const response = await this.signupRequest(name, id, password, phone, email);  // username을 id로 변경
-                if (response.success) {
-                    alert('회원가입이 완료되었습니다.');
-                    this.scene.start('LoginScene');
-                } else {
-                    alert(response.message || '회원가입에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('회원가입 에러:', error);
-                alert('회원가입 처리 중 오류가 발생했습니다.');
-            }
-        });
+    try {
+        const response = await this.signupRequest(name, username, password, phone, email);
+        alert(response.message || '회원가입이 완료되었습니다.');
+        this.scene.start('LoginScene');
+    } catch (error) {
+        console.error('회원가입 에러:', error);
+        alert(error.message || '회원가입 처리 중 오류가 발생했습니다.');
+    }
+});
+
 
         backButton.on('pointerdown', () => {
             this.scene.start('LoginScene');
@@ -199,64 +196,80 @@ class SignupScene extends Phaser.Scene {
             });
 
             // input 이벤트 리스너 추가
-            inputElement.addEventListener('input', (e) => {
-                currentValue = e.target.value;
-                if (type === 'password') {
-                    text.setText('*'.repeat(currentValue.length) + '|');
-                } else {
-                    text.setText(currentValue + '|');
-                }
-            });
+        inputElement.addEventListener('input', (e) => {
+            currentValue = e.target.value;
 
-            // Enter 키 처리
-            inputElement.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    endInput();
-                }
-            });
-        };
-
-        const endInput = () => {
-            isInputActive = false;
-            if (cursorBlink) {
-                cursorBlink.destroy();
-            }
-            if (currentValue === '') {
-                text.setText(defaultText);
+            if (type === 'password') {
+                this.passwordValue = currentValue; // ✅ 진짜 값 저장
+                text.setText('*'.repeat(currentValue.length) + '|');
             } else {
-                text.setText(type === 'password' ? '*'.repeat(currentValue.length) : currentValue);
-            }
-            if (inputElement) {
-                inputElement.remove();
-                inputElement = null;
-            }
-        };
-
-        bg.on('pointerdown', () => {
-            if (!isInputActive) {
-                startInput();
+                text.setText(currentValue + '|');
             }
         });
 
-        // 다른 곳을 클릭했을 때 입력 종료
-        this.input.on('pointerdown', (pointer, gameObjects) => {
-            if (isInputActive && !gameObjects.includes(bg)) {
+        // Enter 키 처리
+        inputElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
                 endInput();
             }
         });
-    }
+    };
+
+    const endInput = () => {
+        isInputActive = false;
+        if (cursorBlink) cursorBlink.destroy();
+        if (inputElement) {
+            inputElement.remove();
+            inputElement = null;
+        }
+
+        if (currentValue === '') {
+            text.setText(defaultText);
+        } else {
+            if (type === 'password') {
+                this.passwordValue = currentValue; // ✅ 진짜 값 저장
+                text.setText('*'.repeat(currentValue.length));
+            } else {
+                text.setText(currentValue);
+            }
+        }
+    };
+
+    // 필드 클릭 시 입력 시작
+    bg.on('pointerdown', () => {
+        if (!isInputActive) {
+            startInput();
+        }
+    });
+
+    // 다른 곳 클릭 시 입력 종료
+    this.input.on('pointerdown', (pointer, gameObjects) => {
+        if (isInputActive && !gameObjects.includes(bg)) {
+            endInput();
+        }
+    });
+};
 
     // signup 요청 메서드 수정
-    async signupRequest(name, id, password, phone, email) {  // username을 id로 변경
+    async signupRequest(name, username, password, phone, email) {  // username을 id로 변경
         try {
-            const response = await fetch('http://your-backend-url/api/signup', {
+
+            console.log("전송할 JSON:", JSON.stringify({
+    name,
+    username,
+    password,
+    phone,
+    email
+}));
+
+            const response = await fetch('http://43.201.253.146:8000/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     name,
-                    id,  // username을 id로 변경
+                    username,  // username을 id로 변경
                     password,
                     phone,
                     email
