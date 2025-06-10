@@ -107,7 +107,7 @@ class GameScene extends Phaser.Scene {
             },
             {
                 id: 'can',
-                name: '음료수 캔캔',
+                name: '음료수 캔',
                 type: 1,
                 difficulty: 1,
                 correctBin: 'bin_can',
@@ -244,9 +244,9 @@ class GameScene extends Phaser.Scene {
                 messageInitial: 'xx두유 200ml 쓰레기가 나타났어.\n근데 이대로는 분리배출이 안될 것 같은데...',
                 messageWarning: 'xx두유 200ml 쓰레기가 나타났어.\n근데 이대로는 분리배출이 안될 것 같은데...',
                 messagePreprocessed: "잘 정리됐어! 이제 종이팩 수거함에 넣자!",
-                messagePreprocessingComplete: "휴, 드디어 두유팩을 분리배출 가능한 \n상태로 만들었어!", // 새로 추가
+                messagePreprocessingComplete: "휴, 드디어 두유팩을\n분리배출 가능한 상태로 만들었어!", // 새로 추가
                 messageAfterPreprocessing: "자, 이제 그럼 다시 분리배출 해볼까?", // 고정 메시지
-                messageCorrect: "정답이야!\n두유팩은 일반 종이팩으로 배출해야해.",
+                messageCorrect: "정답이야! 두유팩은 멸균팩으로 배출해야해.\n 일반 종이팩과는 구별해야하니 명심해줘!!!",
                 messageIncorrect: "오답이야!\n두유팩의 배출 방법을 다시 생각해 볼까?"
             },
             {
@@ -456,7 +456,12 @@ class GameScene extends Phaser.Scene {
         this.currentRound = 1;
         this.maxRounds = this.getRoundData().length;
         this.score = 0;
-        this.health = 3;
+        // health가 data로 넘어오면 유지, 아니면 3으로 초기화
+        if (typeof data.health === 'number') {
+            this.health = data.health;
+        } else if (typeof this.health !== 'number') {
+            this.health = 3;
+        }
         this.isFalling = false;
         this.isProcessingResult = false;
         this.moveLeft = false;
@@ -3574,7 +3579,8 @@ class GameScene extends Phaser.Scene {
             baseScore,
             totalScore,
             timeBonus: timeBonus.toFixed(2),
-            elapsed: Math.round(elapsed / 1000)
+            elapsed: Math.round(elapsed / 1000),
+            health: this.health // 추가
         });
     }
 
@@ -3655,7 +3661,7 @@ class GameScene extends Phaser.Scene {
         }
         // 게임 변수 초기화
         this.score = 0;
-        this.health = 3;
+        //this.health = 3;
         this.currentRound = 1;
         this.maxRounds = this.getRoundData().length; // 현재 레벨의 실제 라운드 수로 설정
         this.currentLaneIndex = 0;
@@ -4031,7 +4037,10 @@ class ResultScene extends Phaser.Scene {
             duration: 500,
             onComplete: () => {
                 // GameScene에 level+1 전달
-                this.scene.start('GameScene', { level: (this.resultData.level || 1) + 1 });
+                this.scene.start('GameScene', {
+                    level: (this.resultData.level || 1) + 1,
+                    health: this.resultData.health // 추가
+                });
             }
         });
     }
