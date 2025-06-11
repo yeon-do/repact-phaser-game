@@ -4,72 +4,45 @@ class LoginInputScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('login_background', './assets/images/main_background.png');
-    this.load.image('dark_bar', './assets/images/dark_bar.png');
+    // login.png 파일 로드
+    this.load.image('login_image', './assets/startscene/login.png');
+    
+    // 만약 위 경로가 안 되면 아래 경로들을 시도해보세요
+    // this.load.image('login_image', 'assets/images/login.png');
+    // this.load.image('login_image', './login.png');
   }
 
   create() {
     const { width, height } = this.sys.game.canvas;
 
-    // 배경 - main_background 이미지와 정확히 같은 색상으로 변경
-    this.add.rectangle(0, 0, width, height, 0x2ecc71).setOrigin(0);
+    // login.png 배경 이미지
+    this.add.image(width / 2, height / 2, 'login_image')
+      .setOrigin(0.5)
+      .setDisplaySize(width, height);
 
-    // 아이디 라벨
-    this.add.text(width * 0.5, height * 0.35, '아이디', {
-      fontFamily: '메니크래피',
-      fontSize: '24px',
-      color: '#FFFFFF'
-    }).setOrigin(0.5);
-
-    // 아이디 입력 박스 - black_bar 이미지
-    const idBar = this.add.image(width * 0.5, height * 0.4, 'dark_bar');
-    idBar.setDisplaySize(width * 0.7, 50).setAlpha(0.8);
-
-    // 비밀번호 라벨
-    this.add.text(width * 0.5, height * 0.45, '비밀번호', {
-      fontFamily: '메니크래피',
-      fontSize: '24px',
-      color: '#FFFFFF'
-    }).setOrigin(0.5);
-
-    // 비밀번호 입력 박스 - black_bar 이미지
-    const pwBar = this.add.image(width * 0.5, height * 0.5, 'dark_bar');
-    pwBar.setDisplaySize(width * 0.7, 50).setAlpha(0.8);
-
-    // DOM 입력 요소 위치 조정 (dark_bar 정중앙에 배치)
-    const inputStyle = 'width: 308px; height: 34px; padding: 0; margin: 0; color: white; border: none; background: none; font-size: 20px; text-align: center; outline: none; line-height: 34px;';
-    const idInput = this.add.dom(width * 0.5, height * 0.4).createFromHTML(`<input type="text" style="${inputStyle}">`);
-    const pwInput = this.add.dom(width * 0.5, height * 0.5).createFromHTML(`<input type="password" style="${inputStyle}">`);
+    // login.png의 입력 필드에 맞는 스타일 (투명하게)
+    const inputStyle = 'width: 250px; padding: 10px; color: white; border: none; background: transparent; font-size: 18px; text-align: center; outline: none;';
     
-    // DOM 요소 중앙 정렬 설정
-    idInput.setOrigin(0.5, 0.5);
-    pwInput.setOrigin(0.5, 0.5);
+    // 아이디 입력 필드 (login.png의 아이디 입력 영역에 맞춤)
+    const idInput = this.add.dom(width * 0.5, height * 0.4).createFromHTML(`<input type="text" placeholder="" style="${inputStyle}">`);
+    idInput.setOrigin(0.5);
 
-    // 로그인 버튼 추가
-    const loginButton = this.add.image(width * 0.5, height * 0.6, 'dark_bar')
-      .setDisplaySize(200, 50)
+    // 비밀번호 입력 필드 (login.png의 비밀번호 입력 영역에 맞춤)
+    const pwInput = this.add.dom(width * 0.5, height * 0.54).createFromHTML(`<input type="password" placeholder="" style="${inputStyle}">`);
+    pwInput.setOrigin(0.5);
+
+    // 로그인 버튼 (login.png의 로그인 버튼 위치에 투명한 클릭 영역)
+    const loginButton = this.add.rectangle(width * 0.7, height * 0.64, 120, 40, 0x000000, 0)
       .setInteractive();
 
-    this.add.text(width * 0.5, height * 0.6, '로그인', {
-      fontFamily: '머니크래피',
-      fontSize: '24px',
-      color: '#FFFFFF'
-    }).setOrigin(0.5);
-
-    // 뒤로가기 버튼 추가
-    const backButton = this.add.text(width * 0.5, height * 0.7, '뒤로가기', {
-      fontFamily: '머니크래피',
-      fontSize: '24px',
-      color: '#FFFFFF'
-    }).setOrigin(0.5).setInteractive();
+    // 뒤로가기 버튼 (login.png의 뒤로가기 버튼 위치에 투명한 클릭 영역)
+    const backButton = this.add.rectangle(width * 0.28, height * 0.64, 120, 40, 0x000000, 0)
+      .setInteractive();
 
     // 로그인 버튼 이벤트
     loginButton.on('pointerdown', async () => {
-      // DOM 입력 요소에서 값 가져오기 - 올바른 방법
       const username = idInput.node.querySelector('input').value;
       const password = pwInput.node.querySelector('input').value;
-      
-      console.log('Username:', username); // 아이디만 로그
       
       if (!username || !password) {
         alert('아이디와 비밀번호를 입력해주세요.');
@@ -77,14 +50,9 @@ class LoginInputScene extends Phaser.Scene {
       }
 
       try {
-        // 로그인 요청 처리 (API 호출)
         const response = await this.loginRequest(username, password);
-        
-        // 로그인 성공 시 사용자 이름을 localStorage에 저장
         localStorage.setItem('username', username);
-        
         alert('로그인 성공!');
-        // 게임 메인 씬으로 이동
         this.scene.start('BootScene');
       } catch (error) {
         alert('로그인 실패: ' + error.message);
@@ -95,9 +63,13 @@ class LoginInputScene extends Phaser.Scene {
     backButton.on('pointerdown', () => {
       this.scene.start('LoginScene');
     });
+
+    // 디버깅용 - 버튼 위치 확인 (개발 후 제거)
+    // loginButton.setStrokeStyle(2, 0x00ff00);
+    // backButton.setStrokeStyle(2, 0xff0000);
   }
 
-  // 로그인 요청 메서드 추가
+  // 로그인 요청 메서드 (기존과 동일)
   async loginRequest(username, password) {
     try {
       const response = await fetch('http://43.201.253.146:8000/login', {
