@@ -10,6 +10,9 @@ class HowToPlayScene extends Phaser.Scene {
         this.load.image('howto_background', './assets/images/main_background.png');
         // 뒤로가기 버튼 (이전/다음 버튼으로도 사용)
         this.load.image('back_button', './assets/images/back.png');
+        this.load.image('right', './assets/startscene/right.png');
+        this.load.image('left', './assets/startscene/left.png');
+
 
         // 게임 방법 이미지들
         for (let i = 1; i <= 8; i++) {
@@ -29,19 +32,18 @@ class HowToPlayScene extends Phaser.Scene {
         this.howtoImage = this.add.image(width / 2, height / 2, 'howtoplay1')
             .setOrigin(0.5);
 
-        // 이전 버튼 (back.png 그대로 사용)
-        this.prevButton = this.add.image(50, height / 2, 'back_button')
+        // 이전 버튼
+        this.prevButton = this.add.image(12, 377, 'left')
             .setInteractive()
-            .setOrigin(0.5)
-            .setDisplaySize(50, 50)
+            .setOrigin(0, 0)
+            .setDisplaySize(80, 85)
             .on('pointerdown', () => this.changePage(-1));
 
-        // 다음 버튼 (back.png를 180도 회전)
-        this.nextButton = this.add.image(width - 50, height / 2, 'back_button')
+        // 다음 버튼 
+        this.nextButton = this.add.image(348, 377, 'right')
             .setInteractive()
-            .setOrigin(0.5)
-            .setDisplaySize(50, 50)
-            .setRotation(Math.PI) // 180도 회전
+            .setOrigin(0, 0)
+            .setDisplaySize(80, 85)
             .on('pointerdown', () => this.changePage(1));
 
         // 뒤로가기 버튼 (상단)
@@ -66,7 +68,7 @@ class HowToPlayScene extends Phaser.Scene {
         this.tweens.add({
             targets: this.blackOverlay,
             alpha: 0,
-            duration: 300,
+            duration: 150,
             onComplete: () => {
                 this.blackOverlay.destroy();
             }

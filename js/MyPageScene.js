@@ -10,7 +10,7 @@ class MyPageScene extends Phaser.Scene {
 
     preload() {
         // mypage.png 이미지 로드
-        this.load.image('mypage_background', './assets/startscene/mypage.png');
+        this.load.image('mypage_background', './assets/startscene/mypage (2).png');
 
         // 뒤집힌 back.img 이미지 로드 (도감 버튼용)
         this.load.image('dex_button', './assets/images/back.png');
@@ -152,8 +152,7 @@ class MyPageScene extends Phaser.Scene {
 
         ecoyaButton.on('pointerdown', () => {
             if (!this.isTransitioning) {
-                // 에코야얼스 웹사이트로 이동
-                window.open('https://ecoyaearth.com/', '_blank');
+                window.open('https://makers.kakao.com/dailyupcycle?ct=home-mainbanner&f=url_share_dailyupcycle', '_blank');
             }
         });
 
@@ -166,7 +165,7 @@ class MyPageScene extends Phaser.Scene {
         this.tweens.add({
             targets: this.blackOverlay,
             alpha: 0,
-            duration: 300,
+            duration: 150,
             onComplete: () => {
                 this.blackOverlay.destroy();
             }

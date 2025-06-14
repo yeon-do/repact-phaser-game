@@ -6,13 +6,13 @@ class BootScene extends Phaser.Scene {
         this.menuItems = [
             { text: '게임 시작', scene: 'GameScene' },
             { text: '게임 방법', scene: 'HowToPlayScene' },
-            { text: '000 마이페이지', scene: 'MyPageScene' } // 유저 이름은 동적으로 설정
+            { text: '마이페이지', scene: 'MyPageScene' } // 유저 이름은 동적으로 설정
         ];
         this.selectedMenuIndex = -1; // 초기에는 선택된 메뉴 없음
         this.menuTexts = [];
         this.selectionBar = null;
         this.isTransitioning = false; // 전환 중인지 여부
-        this.userName = '000'; // 기본 유저 이름
+        this.userName = ''; // 기본 유저 이름
     }
 
     preload() {
@@ -39,7 +39,7 @@ class BootScene extends Phaser.Scene {
         this.userName = localStorage.getItem('name') || localStorage.getItem('username') || '000';
 
         // 마이페이지 메뉴 텍스트 업데이트
-        this.menuItems[2].text = `${this.userName} 마이페이지`;
+        //this.menuItems[2].text = `${this.userName} 마이페이지`;
 
         // 배경 이미지 설정
         this.add.image(0, 0, 'background_img')
@@ -153,7 +153,7 @@ class BootScene extends Phaser.Scene {
         this.tweens.add({
             targets: this.blackOverlay,
             alpha: 0,
-            duration: 300,
+            duration: 150,
             onComplete: () => {
                 this.blackOverlay.setVisible(false);
             }
@@ -165,7 +165,7 @@ class BootScene extends Phaser.Scene {
         this.tweens.add({
             targets: this.blackOverlay,
             alpha: 1,
-            duration: 300,
+            duration: 150,
             onComplete: () => {
                 if (callback) callback();
             }
@@ -174,10 +174,18 @@ class BootScene extends Phaser.Scene {
 
     startSelectedScene() {
         const selectedItem = this.menuItems[this.selectedMenuIndex];
-        // 페이드 아웃 후 씬 전환
-        this.fadeOutOverlay(() => {
-            this.scene.start(selectedItem.scene, { fromBlackOverlay: true });
-        });
+        // '게임 시작' 메뉴일 때만 level, health를 넘김
+        if (selectedItem.scene === 'GameScene') {
+            const userLevel = parseInt(localStorage.getItem('level') || '1', 10);
+            this.fadeOutOverlay(() => {
+                this.scene.start('GameScene', { level: userLevel, health: 3, fromBlackOverlay: true });
+            });
+        } else {
+            // 나머지 씬은 기존대로
+            this.fadeOutOverlay(() => {
+                this.scene.start(selectedItem.scene, { fromBlackOverlay: true });
+            });
+        }
     }
 
 }
