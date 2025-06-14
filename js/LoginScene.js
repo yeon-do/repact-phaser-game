@@ -103,7 +103,7 @@ class LoginScene extends Phaser.Scene {
         this.tweens.add({
             targets: this.blackOverlay,
             alpha: 1,
-            duration: 700,
+            duration: 500,
             onComplete: () => {
                 // 페이드 아웃 완료 후 씬 전환
                 this.scene.start(targetScene, { fromBlackOverlay: true });

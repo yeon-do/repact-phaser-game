@@ -26,18 +26,18 @@ class BootScene extends Phaser.Scene {
     create() {
         // 씬이 시작될 때마다 전환 상태 초기화
         this.isTransitioning = false;
-        
+
         // HowToPlayScene에서 돌아왔는지 체크
         if (localStorage.getItem('returnToBootScene') === 'true') {
             localStorage.removeItem('returnToBootScene');
             // 이미 BootScene이므로 아무것도 하지 않음
         }
-        
+
         const { width, height } = this.sys.game.canvas;
 
         // 로그인된 유저 이름 가져오기 - name을 우선적으로 사용
         this.userName = localStorage.getItem('name') || localStorage.getItem('username') || '000';
-        
+
         // 마이페이지 메뉴 텍스트 업데이트
         this.menuItems[2].text = `${this.userName} 마이페이지`;
 
@@ -65,6 +65,9 @@ class BootScene extends Phaser.Scene {
             .setAlpha(0)
             .setDepth(100) // 가장 위에 표시
             .setVisible(false);
+
+        this.fadeInOverlay();
+
     }
 
     createMenuItems() {
@@ -145,21 +148,35 @@ class BootScene extends Phaser.Scene {
         });
     }
 
-    startSelectedScene() {
-        const selectedItem = this.menuItems[this.selectedMenuIndex];
+    fadeInOverlay() {
+        this.blackOverlay.setAlpha(1).setVisible(true);
+        this.tweens.add({
+            targets: this.blackOverlay,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => {
+                this.blackOverlay.setVisible(false);
+            }
+        });
+    }
 
-        // 검은색 오버레이 표시
-        this.blackOverlay.setVisible(true);
-
-        // 페이드 아웃 효과
+    fadeOutOverlay(callback) {
+        this.blackOverlay.setAlpha(0).setVisible(true);
         this.tweens.add({
             targets: this.blackOverlay,
             alpha: 1,
-            duration: 700,
+            duration: 300,
             onComplete: () => {
-                // 페이드 아웃 완료 후 씬 전환
-                this.scene.start(selectedItem.scene, { fromBlackOverlay: true });
+                if (callback) callback();
             }
+        });
+    }
+
+    startSelectedScene() {
+        const selectedItem = this.menuItems[this.selectedMenuIndex];
+        // 페이드 아웃 후 씬 전환
+        this.fadeOutOverlay(() => {
+            this.scene.start(selectedItem.scene, { fromBlackOverlay: true });
         });
     }
 

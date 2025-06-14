@@ -54,44 +54,23 @@ class HowToPlayScene extends Phaser.Scene {
                 this.scene.run('BootScene');
             });
 
-        // 게임 시작 버튼(임시) 생성 및 숨김
-        this.startButton = this.add.container(width / 2, height / 2 + 200);
-        const buttonBg = this.add.rectangle(0, 0, 180, 60, 0x4caf50, 1).setStrokeStyle(2, 0xffffff);
-        const buttonText = this.add.text(0, 0, '게임 시작', {
-            fontSize: '28px',
-            color: '#fff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.startButton.add([buttonBg, buttonText]);
-        this.startButton.setSize(180, 60);
-        this.startButton.setInteractive(new Phaser.Geom.Rectangle(-90, -30, 180, 60), Phaser.Geom.Rectangle.Contains);
-        this.startButton.on('pointerdown', () => {
-            // 검은색 오버레이 생성 (한 번만 생성)
-            if (!this.blackOverlay) {
-                const { width, height } = this.sys.game.canvas;
-                this.blackOverlay = this.add.rectangle(width / 2, height / 2, width, height, 0x3cbb89, 1)
-                    .setAlpha(0)
-                    .setDepth(1000);
-            } else {
-                this.blackOverlay.setAlpha(0).setVisible(true);
-            }
-
-            // 페이드 아웃 효과
-            this.tweens.add({
-                targets: this.blackOverlay,
-                alpha: 1,
-                duration: 700,
-                onComplete: () => {
-                    this.scene.stop('HowToPlayScene');
-                    this.scene.start('GameScene'); // 실제 게임 씬 이름에 맞게 수정
-                }
-            });
-        });
-        this.startButton.setVisible(false);
-
-
         // 첫 페이지에서는 이전 버튼 숨김
         this.updateButtons();
+
+        // === 페이드 인 오버레이 효과 추가 ===
+        this.blackOverlay = this.add.rectangle(0, 0, width, height, 0x3cbb89)
+            .setOrigin(0, 0)
+            .setAlpha(1)
+            .setDepth(100);
+
+        this.tweens.add({
+            targets: this.blackOverlay,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => {
+                this.blackOverlay.destroy();
+            }
+        });
     }
 
     changePage(delta) {
@@ -114,13 +93,7 @@ class HowToPlayScene extends Phaser.Scene {
 
         // 마지막 페이지에서는 다음 버튼 비활성화
         this.nextButton.setVisible(this.currentPage < this.totalPages);
-
-        // 마지막 페이지에서만 게임 시작 버튼 표시
-        if (this.currentPage === this.totalPages) {
-            this.startButton.setVisible(true);
-        } else {
-            this.startButton.setVisible(false);
-        }
     }
-
 }
+
+

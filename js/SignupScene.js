@@ -103,7 +103,7 @@ class SignupScene extends Phaser.Scene {
 
             console.log("전송할 데이터:", requestData);
 
-            const response = await fetch('http://43.201.253.146:8000/signup', {
+            const response = await fetch('/api/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

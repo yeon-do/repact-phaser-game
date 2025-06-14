@@ -76,6 +76,15 @@
             left: -100px;
             visibility: hidden;
         }
+
+        .some-element {
+            -webkit-user-select: none;
+            /* Safari */
+            -ms-user-select: none;
+            /* IE 10+ and Edge */
+            user-select: none;
+            /* 표준 문법 */
+        }
     </style>
 </head>
 
@@ -83,16 +92,22 @@
     <div id="game-container"></div>
     <div class="fontPreload">.</div>
 
+    <!-- Phaser 라이브러리 먼저 로드 -->
     <script src="js/libraries/phaser.min.js"></script>
-
+    
+    <!-- 게임 씬들을 순서대로 로드 -->
+    <!--
     <script src="js/LoginScene.js"></script>
     <script src="js/LoginInputScene.js"></script>
-    <script src="js/SignupScene.js"></script>
+    <script src="js/SignupScene.js"></script>-->
     <script src="js/BootScene.js"></script>
-    <script src="js/HowToPlayScene.js"></script>
-
+    <script src="js/HowToPlayScene.js"></script> 
+    <script src="js/MyPageScene.js"></script>
+    <script src="js/DexScene.js"></script>  <!-- 이 줄 추가 -->
+    
+    <!-- 메인 게임 파일은 마지막에 로드 -->
     <script src="js/GAMEUP0609.js"></script>
-
+    
     <!-- 전체화면 스크립트 -->
     <script>
         // 전체화면 모드 강제 적용
@@ -161,6 +176,44 @@
             return false;
         });
     </script>
+
+    <script>
+// 게임 설정
+const config = {
+    type: Phaser.AUTO,
+    width: 400,
+    height: 800,
+    parent: 'game-container',
+    dom: {
+        createContainer: true
+    },
+    scene: [
+        //LoginScene, 
+        //LoginInputScene, 
+        //SignupScene, 
+        BootScene, 
+        HowToPlayScene,
+        MyPageScene
+    ]
+};
+
+const game = new Phaser.Game(config);
+
+// 게임 시작 직후 즉시 체크
+setTimeout(() => {
+    const shouldGoToBootScene = localStorage.getItem('returnToBootScene');
+    const isLoggedIn = localStorage.getItem('username') || localStorage.getItem('name');
+    
+    if (shouldGoToBootScene === 'true' && isLoggedIn) {
+        localStorage.removeItem('returnToBootScene');
+        game.scene.stop();
+        game.scene.start('BootScene');
+    } else if (isLoggedIn && !shouldGoToBootScene) {
+        game.scene.stop();
+        game.scene.start('BootScene');
+    }
+}, 50);
+</script>
 </body>
 
 </html>
