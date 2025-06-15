@@ -2,6 +2,8 @@
 class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
+        localStorage.clear();
+        sessionStorage.clear();
         console.log('GameScene: Constructor 실행.');
 
         // === 게임 진행 관련 변수 ===
@@ -16,34 +18,40 @@ class GameScene extends Phaser.Scene {
         // 레벨별 아이템 데이터
         this.levelRounds = {
             1: [
+                { round: 1, itemId: 'handwash', type: 2 },
+                { round: 2, itemId: 'localstock', type: 1 },
+                { round: 3, itemId: 'heimili', type: 2 },
+                { round: 4, isSpecial: true } // 스페셜 라운드 플래그
+            ],
+            2: [
                 { round: 1, itemId: 'can', type: 1 },
                 { round: 2, itemId: 'milk_carton', type: 2 },
                 { round: 3, itemId: 'deliverplastic', type: 2 },
                 { round: 4, itemId: 'newspaper', type: 1 },
                 { round: 5, itemId: 'chicken_bone', type: 3 }
-            ],
-            /*1: [
-                { round: 1, itemId: 'handwash', type: 3 },
-                //{ round: 1, itemId: 'glass_bottle', type: 1 },
-                //{ round: 2, itemId: 'milk_carton', type: 2 },
-                //{ round: 3, itemId: 'newspaper', type: 1 },
-                //{ round: 4, itemId: 'plastic_bottle', type: 2 },
-                //{ round: 5, itemId: 'chicken_bone', type: 3 }
+            ],/*
+            1: [
+                //{ round: 1, itemId: 'handwash', type: 3 },
+                { round: 1, itemId: 'glass_bottle', type: 1 },
+                { round: 2, itemId: 'milk_carton', type: 2 },
+                { round: 3, itemId: 'newspaper', type: 1 },
+                { round: 4, itemId: 'plastic_bottle', type: 2 },
+                { round: 5, itemId: 'chicken_bone', type: 3 }
             ],
             2: [
                 { round: 1, itemId: 'handwash', type: 2 },
-                { round: 2, itemId: 'localstock', type: 2 },
+                { round: 2, itemId: 'localstock', type: 1 },
                 { round: 3, itemId: 'heimili', type: 2 },
                 { round: 4, isSpecial: true } // 스페셜 라운드 플래그
 
-            ],*/
-            2: [
+            ],
+            3: [
                 { round: 1, itemId: 'can', type: 1 },
                 { round: 2, itemId: 'tang', type: 3 },
                 { round: 3, itemId: 'book', type: 1 },
                 { round: 4, itemId: 'deliverplastic', type: 2 },
                 { round: 5, itemId: 'soimilk', type: 2 }
-            ],
+            ],*/
             // ...추가 레벨...
         };
         this.getRoundData = () => this.levelRounds[this.level] || [];
@@ -145,8 +153,8 @@ class GameScene extends Phaser.Scene {
                 type: 1,
                 difficulty: 2,
                 correctBin: 'bin_pack',
-                messageInitial: '리필리 대표 제품인 로컬스톡 현미팩이 나타났어.\n어디에 분리배출 해야 할까?',
-                messageCorrect: '정답이야!\n현미팩은 종이팩팩 전용 수거함에 버려야 해!',
+                messageInitial: '맛 좋은 유기농 로컬스톡 현미팩이 나타났어.\n어디에 분리배출 해야 할까?',
+                messageCorrect: '정답이야! 현미팩은\n종이팩(멸균팩) 전용 수거함에 버려야 해!',
                 messageIncorrect: '오답이야!\n현미팩의 배출 방법을 다시 생각해볼까?'
             },
             // Type 2 아이템들 (전처리 필요)
@@ -335,6 +343,13 @@ class GameScene extends Phaser.Scene {
                         ]
                     },
                     {
+                        text: '펼치고',
+                        commands: [
+                            { action: 'left', key: '←', color: '#FF9500' },
+                            { action: 'right', key: '→', color: '#0080FF' }
+                        ]
+                    },
+                    {
                         text: '말린 다음',
                         commands: [
                             { action: 'left', key: '←', color: '#FF9500' },
@@ -348,24 +363,25 @@ class GameScene extends Phaser.Scene {
                         ]
                     },
                 ],
-                messageInitial: '다 쓴 유한킴벌리 핸드워시가 나타났어.\n리필 제품으로 간편하게 교체할 수 있어!',
-                messageWarning: '다 쓴 유한킴벌리 핸드워시가 나타났어.\n리필 제품으로 간편하게 교체할 수 있어!',
-                messagePreprocessingComplete: "휴, 드디어 핸드워시를\n분리배출 가능한 상태로 만들었어!", // 새로 추가
+
+                messageInitial: '다 쓴 유한킴벌리 핸드워시가 나타났어.\n분리배출 후 리필 제품으로 교체하자!',
+                messageWarning: '다 쓴 유한킴벌리 핸드워시가 나타났어.\n분리배출 후 리필 제품으로 교체하자!',
+                messagePreprocessingComplete: "휴, 드디어 핸드워시 팩을\n분리배출 가능한 상태로 만들었어!", // 새로 추가
                 messageAfterPreprocessing: "펼쳐서 말린 핸드워시 팩은\n어디에 버려야 할까?", // 고정 메시지
-                messageCorrect: "정답이야! 플라스틱으로 배출해야해.\n 나머지는 종이팩(멸균팩)으로 구분해서 배출해 줘!",
-                messageIncorrect: "오답이야!\n펌프와 홀더의 배출 방법을 다시 생각해 볼까?"
+                messageCorrect: "정답이야! 종이팩(멸균팩)으로 버려야 해.\n일반 종이팩과 구분해야 하는 점 잊지마!",
+                messageIncorrect: "오답이야!\n핸드워시 팩 배출 방법을 다시 생각해 볼까?"
             },
             {
                 id: 'heimili',
                 name: '헤이밀리 주방 세제',
-                preprocessedName: '상단 입구와 플라스틱 캡',
+                preprocessedName: '플라스틱을 제거한 세재 팩',
                 type: 2,
-                difficulty: 4,
-                correctBin: 'bin_plastic',
+                difficulty: 3,
+                correctBin: 'bin_pack',
                 requiresPreprocessing: true,
                 preprocessingSteps: [
                     {
-                        text: '펌프와 홀더는 분리해 재사용하고',
+                        text: '입구의 플라스틱 캡을 제거하고',
                         commands: [
                             { action: 'left', key: '←', color: '#FF9500' },
                             { action: 'right', key: '→', color: '#0080FF' }
@@ -378,7 +394,14 @@ class GameScene extends Phaser.Scene {
                         ]
                     },
                     {
-                        text: '말린 다음',
+                        text: '펼차고',
+                        commands: [
+                            { action: 'left', key: '←', color: '#FF9500' },
+                            { action: 'right', key: '→', color: '#0080FF' }
+                        ]
+                    },
+                    {
+                        text: '말려서',
                         commands: [
                             { action: 'left', key: '←', color: '#FF9500' },
                             { action: 'right', key: '→', color: '#0080FF' }
@@ -391,57 +414,13 @@ class GameScene extends Phaser.Scene {
                         ]
                     },
                 ],
-                messageInitial: '다 쓴 유한킴벌리 핸드워시가 나타났어.\n리필 제품으로 간편하게 교체할 수 있어!',
-                messageWarning: '다 쓴 유한킴벌리 핸드워시가 나타났어.\n리필 제품으로 간편하게 교체할 수 있어!',
-                messagePreprocessingComplete: "휴, 드디어 핸드워시를\n분리배출 가능한 상태로 만들었어!", // 새로 추가
+                messageInitial: '다 쓴 헤이밀리 주방 세제가 나타났어.\n미세플라스틱 걱정없이 세척할 수 있었어!',
+                messageWarning: '다 쓴 헤이밀리 주방 세제가 나타났어.\n미세플라스틱 걱정없이 세척할 수 있었어!',
+                messagePreprocessingComplete: "휴, 드디어 헤이밀리 팩을\n분리배출 가능한 상태로 만들었어!", // 새로 추가
                 messageAfterPreprocessing: "아까 분리한 입구와 캡은\n어디에 버려야 할까?", // 고정 메시지
-                messageCorrect: "정답이야! 플라스틱으로 배출해야해.\n 나머지는 종이팩(멸균팩)으로 구분해서 배출해 줘!",
-                messageIncorrect: "오답이야!\n펌프와 홀더의 배출 방법을 다시 생각해 볼까?"
+                messageCorrect: "정답이야! 종이팩(멸균팩)으로 버려야 해.\n일반 종이팩과 구분해야 하는 점 잊지마!",
+                messageIncorrect: "오답이야!\n헤이밀리 팩 배출 방법을 다시 생각해 볼까?"
             },
-            {
-                id: 'localstock',
-                name: '비타민 가득 현미팩',
-                preprocessedName: '상단 입구와 플라스틱 캡',
-                type: 2,
-                difficulty: 4,
-                correctBin: 'bin_pack',
-                requiresPreprocessing: true,
-                preprocessingSteps: [
-                    {
-                        text: '내용물을 완전히 제거한 후',
-                        commands: [
-                            { action: 'left', key: '←', color: '#FF9500' },
-                            { action: 'right', key: '→', color: '#0080FF' }
-                        ]
-                    },
-                    {
-                        text: '입구의 플라스틱 캡을 제거하고',
-                        commands: [
-                            { action: 'down', key: '↓', color: '#00FF00' }
-                        ]
-                    },
-                    {
-                        text: '팩을 납작하게 만든 뒤',
-                        commands: [
-                            { action: 'left', key: '←', color: '#FF9500' },
-                            { action: 'right', key: '→', color: '#0080FF' }
-                        ]
-                    },
-                    {
-                        text: '차곡 차곡 모으기',
-                        commands: [
-                            { action: 'down', key: '↓', color: '#00FF00' }
-                        ]
-                    },
-                ],
-                messageInitial: '다 먹은 비타민 가득 현미팩이 나타났어.\n그냥 버리면 안될 것 같은데..!',
-                messageWarning: '다 먹은 비타민 가득 현미팩이이 나타났어.\n그냥 버리면 안될 것 같은데..!',
-                messagePreprocessingComplete: "휴, 드디어 현미팩을\n분리배출 가능한 상태로 만들었어!", // 새로 추가
-                messageAfterPreprocessing: "아까 분리한 입구와 캡은\n어디에 버려야 할까?", // 고정 메시지
-                messageCorrect: "정답이야! 플라스틱으로 배출해야해.\n 나머지는 종이팩(멸균팩)으로 구분해서 배출해 줘!",
-                messageIncorrect: "오답이야!\n현미팩의 배출 방법을 다시 생각해 볼까?"
-            },
-
 
             // Type 3 아이템들 (퀴즈)
             {
@@ -475,6 +454,53 @@ class GameScene extends Phaser.Scene {
                 messageIncorrect: '오답이야!\n귤 껍질의 배출 방법을 다시 생각해볼까?'
             }
         ];
+        this.specialData = {
+            id: 'special_paper_recycle',
+            // 팝업에 처음 뜨는 텍스트
+            popupMessage: '잠깐! 이렇게 분리배출한 종이팩들은 \n어떻게 재활용되는걸까?',
+            // special warning 이미지 키
+            warningImageKey: 'special_warning_slide_img',
+            // special 안내 텍스트 (팝업 위에 잠깐 표시)
+            introText: '종이팩이 재활용 되는 과정을 알아보자',
+            // step 시작 시 메시지창 텍스트
+            startMessage: '종이팩의 재활용 과정을 알아보자!',
+            // 단계별 설명
+            steps: [
+                {
+                    text: '1. 깨끗한 종이팩을 따로 골라줘요.',
+                    imageKey: 'special_step1_img',
+                    commands: [
+                        { action: 'left', key: '←' }
+                    ]
+                },
+                {
+                    text: '2. 물에 담가 펄프와 비닐,\n알루미늄을 깨끗하게 분리해요.',
+                    imageKey: 'special_step2_img',
+                    commands: [
+                        { action: 'down', key: '↓' },
+                        { action: 'down', key: '↓' },
+                        { action: 'right', key: '→' }
+                    ]
+                },
+                {
+                    text: '3. 남은 이물질을 정리하고,\n펄프만 남겨 깨끗하게 다듬어요.',
+                    imageKey: 'special_step3_img',
+                    commands: [
+                        { action: 'right', key: '→' },
+                        { action: 'left', key: '←' }
+                    ]
+                },
+                {
+                    text: '4. 정리된 펄프는\n부드러운 화장지로 다시 태어나요.',
+                    imageKey: 'special_step4_img',
+                    commands: [
+                        { action: 'right', key: '→' },
+                        { action: 'right', key: '→' }
+                    ]
+                }
+            ],
+            completeMessage: 'Special Round 500포인트 획득!\n그럼 이제 종이팩 재활용 실천하러 가자!'
+        };
 
         // === 쓰레기통 설정 ===
         this.binKeys = ['bin_glass', 'bin_paper', 'bin_pack', 'bin_can', 'bin_plastic'];
@@ -545,7 +571,6 @@ class GameScene extends Phaser.Scene {
         this.load.image('button_left_pressed_img', 'assets/images/button_left_p.png');
         this.load.image('button_down_pressed_img', 'assets/images/button_down_p.png');
         this.load.image('button_right_pressed_img', 'assets/images/button_right_p.png');
-
         // 쓰레기통 이미지 로드 (닫힌 상태 및 열린 상태)
         this.binKeys.forEach(key => {
             const binImageKey = `${key}_img`;
@@ -590,12 +615,19 @@ class GameScene extends Phaser.Scene {
         //type2 화면 구성 아이템 로드
         this.load.image('warning_slide_img', 'assets/images/warning_animation.png');
         this.load.image('popup_bg_img', 'assets/images/popup_bg.png');
-        this.load.image('left_key_img', 'assets/images/button_left.png');
-        this.load.image('down_key_img', 'assets/images/button_down.png');
-        this.load.image('right_key_img', 'assets/images/button_right.png');
+        this.load.image('left_key_img', 'assets/images/cd_button_left.png');
+        this.load.image('down_key_img', 'assets/images/cd_button_down.png');
+        this.load.image('right_key_img', 'assets/images/cd_button_right.png');
         this.load.image('left_key_dim_img', 'assets/images/left_key_dim.png');
         this.load.image('down_key_dim_img', 'assets/images/down_key_dim.png');
         this.load.image('right_key_dim_img', 'assets/images/right_key_dim.png');
+
+        //special round
+        this.load.image('special_warning_slide_img', 'assets/images/special_warning_slide_img.png');
+        this.load.image('special_step1_img', 'assets/images/special_step1_img.png');
+        this.load.image('special_step2_img', 'assets/images/special_step2_img.png');
+        this.load.image('special_step3_img', 'assets/images/special_step3_img.png');
+        this.load.image('special_step4_img', 'assets/images/special_step4_img.png');
     }
 
     init(data) {
@@ -739,36 +771,6 @@ class GameScene extends Phaser.Scene {
 
         console.log('GameScene: create 완료.');
     }
-    specialRoundData = {
-        id: 'special_paper_recycle',
-        popupMessage: '<special round>\n종이팩이 재활용되는 과정을 알아보자!',
-        warningImageKey: 'special_warning_slide_img',
-        steps: [
-            {
-                text: '깨끗한 종이팩을 따로 골라줘요.',
-                imageKey: 'special_step1_img',
-                commands: [
-                    { action: 'left', key: '←', color: '#FF9500' }
-                ]
-            },
-            {
-                text: '종이팩을 세척해서 압축해요.',
-                imageKey: 'special_step2_img',
-                commands: [
-                    { action: 'down', key: '↓', color: '#0080FF' }
-                ]
-            },
-            {
-                text: '펄프로 만들어 새 종이로 재탄생!',
-                imageKey: 'special_step3_img',
-                commands: [
-                    { action: 'right', key: '→', color: '#FFD700' }
-                ]
-            }
-        ],
-        completeMessage: '이렇게 종이팩이 다시 태어나요!\n분리배출 정말 중요하죠?'
-    };
-
 
     createUIContainers() {
         // 각 게임 타입별 UI 컨테이너 생성
@@ -2759,9 +2761,13 @@ class GameScene extends Phaser.Scene {
     }
 
     // ...existing code...
-
     handlePreprocessingCommand(action) {
         try {
+            // special round 여부 확인
+            if (this.specialStepInputEnabled) {
+                // special round의 경우 무시
+                return;
+            }
             const currentKeyIndex = this.commandKeyImages.findIndex(key => key.active);
             if (currentKeyIndex === -1) {
                 console.log('활성화된 커맨드 키가 없음');
@@ -2809,7 +2815,7 @@ class GameScene extends Phaser.Scene {
                     targets: currentKey.image,
                     y: currentKey.image.y - 50,
                     alpha: 0,
-                    duration: 500,
+                    duration: 300,
                     onComplete: () => {
                         // 이미지 제거
                         if (currentKey.image) {
@@ -2831,7 +2837,6 @@ class GameScene extends Phaser.Scene {
 
                         // 현재 키 비활성화
                         currentKey.active = false;
-
                         // 상황 완료 여부 확인 후 텍스트 진하게 변경
                         const remainingCommandsInStep = this.commandKeyImages.filter(key =>
                             key.stepIndex === currentKey.stepIndex &&
@@ -2844,7 +2849,6 @@ class GameScene extends Phaser.Scene {
                             this.updateMessageWithCommand();
                             console.log(`상황 "${currentKey.text}" 완료 - 텍스트 진하게 변경`);
                         }
-
                         // 마지막 커맨드인 경우 특별 처리
                         if (isLastCommand) {
                             this.time.delayedCall(1500, () => {
@@ -2932,7 +2936,7 @@ class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: this.preprocessingItemImage,
                     alpha: 0,
-                    duration: 2000, // 2초에 걸쳐 서서히 사라짐
+                    duration: 1500, // 2초에 걸쳐 서서히 사라짐
                     onComplete: () => {
                         // 이미지가 완전히 사라진 후 다음 단계로
                         this.time.delayedCall(500, () => {
@@ -2942,7 +2946,7 @@ class GameScene extends Phaser.Scene {
                 });
             } else {
                 // 이미지가 없는 경우 바로 다음 단계로
-                this.time.delayedCall(2000, () => {
+                this.time.delayedCall(1500, () => {
                     this.startCleanupAnimation();
                 });
             }
@@ -3659,9 +3663,9 @@ class GameScene extends Phaser.Scene {
         console.log('GameScene: 다음 라운드로 진행, 현재:', this.currentRound, '-> 다음:', this.currentRound + 1);
         this.fallCount = 0;
 
-        if (this.level === 2 && this.currentRound === 3) {
+        if (this.level === 1 && this.currentRound === 3) {
             // 3라운드 끝나면 3초 후 스페셜 라운드 진입
-            this.time.delayedCall(3000, () => {
+            this.time.delayedCall(2000, () => {
                 this.startSpecialRound();
             });
             return;
@@ -3692,74 +3696,715 @@ class GameScene extends Phaser.Scene {
     }
 
 
+    /*   startSpecialRound() {
+           // 팝업 메시지와 함께 special round 시작
+           this.showSpecialPreprocessingPopup(this.specialData);
+       }
+   
+       showSpecialPreprocessingPopup() {
+           // 팝업 배경
+           this.preprocessingPopupBg = this.add.image(60, 240, 'popup_bg_img')
+               .setDisplaySize(320, 375)
+               .setOrigin(0, 0)
+               .setAlpha(0)
+               .setDepth(25);
+   
+           // 메시지 창에는 popupMessage만 유지
+           if (this.messageTextObject) {
+               this.messageTextObject.setText(this.specialData.popupMessage);
+               this.messageTextObject.setVisible(true);
+           }
+   
+           // 팝업 페이드인
+           this.tweens.add({
+               targets: this.preprocessingPopupBg,
+               alpha: 1,
+               duration: 500,
+               onComplete: () => {
+                   this.showSpecialWarningSlideAnimation();
+               }
+           });
+       }
+   
+       showSpecialWarningSlideAnimation() {
+           const { width } = this.sys.game.canvas;
+           // special warning 이미지 사용
+           this.specialWarningSlide = this.add.image(width + 700, 243, this.specialData.warningImageKey)
+               .setOrigin(0, 0)
+               .setDepth(26)
+               .setDisplaySize(1300, 353.53);
+   
+           this.tweens.add({
+               targets: this.specialWarningSlide,
+               x: -448,
+               duration: 2000,
+               ease: 'Power2',
+               onComplete: () => {
+                   // === 안내 텍스트 2종 생성 ===
+                   // <special round>
+                   const centerX = this.sys.game.canvas.width / 2;
+   
+                   // <special round>
+                   const specialRoundText = this.add.text(
+                       centerX, 391,
+                       '<special round>',
+                       {
+                           font: '24px "머니그라피"',
+                           fill: '#303030',
+                           align: 'center',
+                           wordWrap: { width: 408 }
+                       }
+                   ).setOrigin(0.5, 0) // ← x축 가운데 정렬
+                       .setAlpha(0.5)
+                       .setDepth(30);
+   
+                   // 종이팩이 재활용되는 과정을 알아보자!
+                   const infoText = this.add.text(
+                       centerX, 391 + 32,
+                       '종이팩이 재활용되는 과정을 알아보자!',
+                       {
+                           font: '24px "머니그라피"',
+                           fill: '#303030',
+                           align: 'center',
+                           wordWrap: { width: 408 }
+                       }
+                   ).setOrigin(0.5, 0) // ← x축 가운데 정렬
+                       .setAlpha(1)
+                       .setDepth(30);
+                   // 2초 후 서서히 사라지고 step 시작
+                   this.time.delayedCall(2000, () => {
+                       this.tweens.add({
+                           targets: [specialRoundText, infoText],
+                           alpha: 0,
+                           duration: 700,
+                           onComplete: () => {
+                               specialRoundText.destroy();
+                               infoText.destroy();
+                               // step sequence 시작
+                               this.startSpecialStepSequence(0);
+                           }
+                       });
+                   });
+               }
+           });
+       }
+   
+       // 단계별로 이미지/텍스트/커맨드키 표시
+       startSpecialStepSequence(stepIndex) {
+           // 현재 step 데이터
+           if (!this.specialData || !this.specialData.steps || stepIndex >= this.specialData.steps.length) {
+               console.error('Invalid special data or step index');
+               return;
+           }
+           // 1. 텍스트창 업데이트
+           if (this.messageTextObject) {
+               this.messageTextObject.setText("종이팩의 재활용 과정을 알아보자!");
+               this.messageTextObject.setVisible(true);
+           }
+   
+           // 이전 step UI 제거
+           if (this.specialStepImage) this.specialStepImage.destroy();
+           if (this.specialStepText) this.specialStepText.destroy();
+           if (this.specialCommandKeys) this.specialCommandKeys.forEach(img => img.destroy());
+           this.specialCommandKeys = [];
+   
+           // 마지막 단계 완료 시
+           if (stepIndex >= this.specialData.steps.length) {
+               if (this.specialStepText) this.specialStepText.destroy();
+               this.time.delayedCall(2000, () => {
+                   this.cleanupSpecialRound();
+               });
+               return;
+           }
+   
+           // 현재 step 데이터
+           const step = this.specialData.steps[stepIndex];
+   
+           // 단계별 이미지 (358, 40)
+           this.specialStepImage = this.add.image(40, 358, step.imageKey)
+               .setOrigin(0, 0)
+               .setDisplaySize(160, 160)
+               .setDepth(27);
+   
+           // 단계별 설명 (308, 80) 가운데 정렬
+           this.specialStepText = this.add.text(80, 308, step.text, {
+               font: '20px "머니그라피"',
+               fill: '#303030',
+               align: 'center',
+               //wordWrap: { width: 220 }
+           }).setOrigin(0, 0).setDepth(27);
+   
+   
+           this.setupSpecialCommandKeys(step);
+           // 첫 번째 키만 활성화된 상태로 시작
+           this.handleNextSpecialCommand();
+           // 현재 step 인덱스 저장
+           this.currentSpecialStep = stepIndex;
+       }
+   
+       setupSpecialCommandKeys(step) {
+           // type2의 setupCommandKeys와 유사하게 구현
+           if (this.specialCommandKeys) {
+               this.specialCommandKeys.forEach(key => key.destroy());
+           }
+           this.specialCommandKeys = [];
+   
+           // 커맨드 키들 위치 설정
+           let keyX = 238;  // 왼쪽에서 238
+           const keyY = 418; // 위에서 418
+   
+           // 모든 커맨드 키 한번에 생성 (마지막 키가 가장 앞에 보이도록)
+           step.commands.forEach((cmd, idx) => {
+               const isActive = idx === 0;  // 첫 번째 키만 활성화
+               let keyImageKey = cmd.action === 'left'
+                   ? (isActive ? 'left_key_img' : 'left_key_dim_img')
+                   : cmd.action === 'down'
+                       ? (isActive ? 'down_key_img' : 'down_key_dim_img')
+                       : (isActive ? 'right_key_img' : 'right_key_dim_img');
+   
+               let keyImg = this.add.image(keyX + (idx * 24), keyY, keyImageKey)
+                   .setDisplaySize(40, 43)
+                   .setOrigin(0, 0)
+                   .setDepth(28 + (step.commands.length - idx)); // 뒤의 키가 더 앞에 보이도록
+   
+               this.specialCommandKeys.push(keyImg);
+           });
+   
+           // 입력 관련 변수 설정
+           this.specialStepInputEnabled = true;
+           this.specialStepCommands = step.commands.slice();
+           this.specialStepCommandIndex = 0;
+       }
+   
+       handleNextSpecialCommand() {
+           if (!this.specialStepInputEnabled) return;
+           const expected = this.specialStepCommands[this.specialStepCommandIndex];
+   
+           // 키보드 입력
+           this.input.keyboard.once('keydown', (event) => {
+               let action = null;
+               if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT) action = 'left';
+               if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN) action = 'down';
+               if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.RIGHT) action = 'right';
+               if (action === expected.action) {
+                   this.processSpecialCommandInput(action);
+               } else {
+                   // 틀린 입력시 흔들림 효과
+                   const keyImg = this.specialCommandKeys[this.specialStepCommandIndex];
+                   this.tweens.add({
+                       targets: keyImg,
+                       x: keyImg.x + 5,
+                       duration: 50,
+                       yoyo: true,
+                       repeat: 2
+                   });
+                   this.handleNextSpecialCommand();
+               }
+           });
+   
+           // 버튼 입력
+           ['left', 'down', 'right'].forEach(dir => {
+               this.commandButtons[dir].once('pointerdown', () => {
+                   if (!this.specialStepInputEnabled) return;
+                   if (dir === expected.action) {
+                       this.processSpecialCommandInput(dir);
+                   } else {
+                       const keyImg = this.specialCommandKeys[this.specialStepCommandIndex];
+                       this.tweens.add({
+                           targets: keyImg,
+                           x: keyImg.x + 5,
+                           duration: 50,
+                           yoyo: true,
+                           repeat: 2
+                       });
+                       this.handleNextSpecialCommand();
+                   }
+               });
+           });
+       }
+   
+       processSpecialCommandInput(action) {
+           const keyImg = this.specialCommandKeys[this.specialStepCommandIndex];
+   
+           // 날아가는 애니메이션
+           this.tweens.add({
+               targets: keyImg,
+               y: keyImg.y - 50,
+               alpha: 0,
+               duration: 400,
+               onComplete: () => keyImg.destroy()
+           });
+   
+           // 남은 키들 앞으로 당기기
+           for (let i = this.specialStepCommandIndex + 1; i < this.specialCommandKeys.length; i++) {
+               const key = this.specialCommandKeys[i];
+               this.tweens.add({
+                   targets: key,
+                   x: 238 + ((i - this.specialStepCommandIndex - 1) * 48),
+                   duration: 300
+               });
+           }
+   
+           // 다음 커맨드로 이동
+           this.specialStepCommandIndex++;
+   
+           if (this.specialStepCommandIndex < this.specialStepCommands.length) {
+               // 다음 키 활성화
+               const nextKeyImg = this.specialCommandKeys[this.specialStepCommandIndex];
+               const nextCmd = this.specialStepCommands[this.specialStepCommandIndex];
+               let activeKeyImageKey =
+                   nextCmd.action === 'left' ? 'left_key_img' :
+                       nextCmd.action === 'down' ? 'down_key_img' : 'right_key_img';
+               nextKeyImg.setTexture(activeKeyImageKey);
+   
+               this.handleNextSpecialCommand();
+           } else {
+               // 모든 커맨드 완료 - 다음 step으로
+               this.specialStepInputEnabled = false;
+               this.time.delayedCall(400, () => {
+                   this.startSpecialStepSequence(this.specialData, this.currentSpecialStep + 1);
+               });
+           }
+       }
+   
+       cleanupSpecialRound() {
+           // 이미지/텍스트/경고 애니메이션 제거
+           if (this.specialStepImage) this.specialStepImage.destroy();
+           if (this.specialStepText) this.specialStepText.destroy();
+           if (this.specialCommandKeys) this.specialCommandKeys.forEach(img => img.destroy());
+           if (this.specialWarningSlide) {
+               this.tweens.add({
+                   targets: this.specialWarningSlide,
+                   x: -1500,
+                   duration: 1000,
+                   onComplete: () => {
+                       this.specialWarningSlide.destroy();
+                       if (this.preprocessingPopupBg) {
+                           this.tweens.add({
+                               targets: this.preprocessingPopupBg,
+                               alpha: 0,
+                               duration: 500,
+                               onComplete: () => {
+                                   this.preprocessingPopupBg.destroy();
+                                   // complete 화면(결과 등)으로 이동
+                                   this.completeLevel();
+                               }
+                           });
+                       }
+                   }
+               });
+           }
+       }*/
+
     startSpecialRound() {
         // 팝업 메시지와 함께 special round 시작
-        this.showSpecialPreprocessingPopup(this.specialRoundData);
+        this.showSpecialPopup();
     }
 
-    showSpecialPreprocessingPopup(specialData) {
+    showSpecialPopup() {
         // 팝업 배경
-        this.preprocessingPopupBg = this.add.image(60, 240, 'popup_bg_img')
+        this.specialPopupBg = this.add.image(60, 240, 'popup_bg_img')
             .setDisplaySize(320, 375)
             .setOrigin(0, 0)
             .setAlpha(0)
             .setDepth(25);
 
-        // 메시지 창에는 popupMessage만 유지
+        // 메시지 업데이트
         if (this.messageTextObject) {
-            this.messageTextObject.setText(specialData.popupMessage);
+            this.messageTextObject.setText(this.specialData.popupMessage);
             this.messageTextObject.setVisible(true);
         }
 
         // 팝업 페이드인
         this.tweens.add({
-            targets: this.preprocessingPopupBg,
+            targets: this.specialPopupBg,
             alpha: 1,
-            duration: 1000,
+            duration: 500,
             onComplete: () => {
-                this.showSpecialWarningSlideAnimation(specialData);
+                this.showSpecialWarningAnimation();
             }
         });
     }
 
-    showSpecialWarningSlideAnimation(specialData) {
+    showSpecialWarningAnimation() {
         const { width } = this.sys.game.canvas;
-        // special warning 이미지 사용
-        this.specialWarningSlide = this.add.image(width + 700, 167, specialData.warningImageKey)
+
+        this.specialWarningSlide = this.add.image(width + 700, 243, this.specialData.warningImageKey)
             .setOrigin(0, 0)
             .setDepth(26)
-            .setDisplaySize(1417, 556);
+            .setDisplaySize(1300, 353.53);
 
+        // 왼쪽으로 슬라이드
         this.tweens.add({
             targets: this.specialWarningSlide,
             x: -448,
-            duration: 2000,
+            duration: 1500,
             ease: 'Power2',
             onComplete: () => {
-                this.startSpecialStepSequence(specialData, 0);
+                // 안내 텍스트 표시
+                this.showSpecialIntroText();
             }
         });
     }
 
-    // 단계별로 이미지/텍스트/커맨드키 표시
-    startSpecialStepSequence(specialData, stepIndex) {
+    showSpecialIntroText() {
+        const centerX = this.sys.game.canvas.width / 2;
+
+        // Special Round 텍스트
+        const specialRoundText = this.add.text(
+            centerX, 391,
+            '<special round>',
+            {
+                font: '24px "머니그라피"',
+                fill: '#303030',
+                align: 'center'
+            }
+        ).setOrigin(0.5, 0)
+            .setAlpha(0.5)
+            .setDepth(30);
+
+        // 안내 텍스트
+        const infoText = this.add.text(
+            centerX, 423,
+            this.specialData.introText,
+            {
+                font: '24px "머니그라피"',
+                fill: '#303030',
+                align: 'center'
+            }
+        ).setOrigin(0.5, 0)
+            .setDepth(30);
+
+        // 2초 후 페이드아웃하고 스텝 시퀀스 시작
+        this.time.delayedCall(2000, () => {
+            this.tweens.add({
+                targets: [specialRoundText, infoText],
+                alpha: 0,
+                duration: 700,
+                onComplete: () => {
+                    specialRoundText.destroy();
+                    infoText.destroy();
+                    this.initializeSpecialSteps();
+                }
+            });
+        });
+    }
+
+    initializeSpecialSteps() {
+        // 스텝 관련 변수 초기화
+        this.currentSpecialStep = 0;
+        this.specialStepInputEnabled = true;
+
+        // 현재 스텝의 이미지와 텍스트 표시
+        this.displaySpecialStepContent(0);
+
+        // 모든 커맨드 키 초기화 및 표시
+        this.initializeSpecialCommandKeys();
+    }
+
+    displaySpecialStepContent(stepIndex) {
+        // 이전 이미지와 텍스트 제거
+        if (this.specialStepImage) this.specialStepImage.destroy();
+        if (this.specialStepText) this.specialStepText.destroy();
+
+        const step = this.specialData.steps[stepIndex];
+        // 1. 텍스트창 업데이트
+        if (this.messageTextObject) {
+            this.messageTextObject.setText("종이팩의 재활용 과정을 알아보자!");
+            this.messageTextObject.setVisible(true);
+        }
+
+        // 단계별 이미지 (왼쪽에서 40px, 위에서 358px)
+        this.specialStepImage = this.add.image(40, 358, step.imageKey)
+            .setOrigin(0, 0)
+            .setDisplaySize(160, 160)
+            .setDepth(27)
+            .setAlpha(0); // 처음에는 투명하게
+
+        // 단계별 설명 (왼쪽에서 80px, 위에서 308px)
+        this.specialStepText = this.add.text(80, 308, step.text, {
+            font: '20px "머니그라피"',
+            fill: '#303030',
+            align: 'center'
+        })
+            .setOrigin(0, 0)
+            .setDepth(27)
+            .setAlpha(0); // 처음에는 투명하게
+
+        // 페이드인 애니메이션
+        this.tweens.add({
+            targets: [this.specialStepImage, this.specialStepText],
+            alpha: 1,
+            duration: 500,
+            ease: 'Power2'
+        });
+    }
+
+    initializeSpecialCommandKeys() {
+        this.specialCommandKeys = [];
+        this.specialCommands = [];
+        this.activeKeyIndex = 0;
+
+        // 모든 스텝의 커맨드를 하나의 배열로 합침
+        this.specialData.steps.forEach((step, stepIndex) => {
+            step.commands.forEach((cmd, cmdIndex) => {
+                this.specialCommands.push({
+                    ...cmd,
+                    stepIndex,
+                    commandIndex: cmdIndex
+                });
+            });
+        });
+
+        // 커맨드 키 생성
+        let keyX = 238;
+        const keyY = 418;
+
+        this.specialCommands.forEach((cmd, idx) => {
+            const isActive = idx === 0;  // 첫 번째만 활성화
+            const keyImg = this.add.image(
+                keyX + (idx * 24),
+                keyY,
+                isActive ? `${cmd.action}_key_img` : `${cmd.action}_key_dim_img`
+            )
+                .setDisplaySize(40, 43)
+                .setOrigin(0, 0)
+                .setDepth(28 + (this.specialCommands.length - idx));
+
+            // 키 속성 설정
+            keyImg.active = isActive;
+            keyImg.action = cmd.action;
+            keyImg.commandIndex = idx;
+            keyImg.stepIndex = cmd.stepIndex;
+            this.specialCommandKeys.push(keyImg);
+        });
+
+        // 입력 처리 시작
+        this.handleSpecialCommand();
+    }
+    handleSpecialCommand() {
+        // special round에서만 동작
+        if (!this.specialStepInputEnabled) return;
+
+        // 현재 활성화된 커맨드 찾기
+        const currentKey = this.specialCommandKeys[this.activeKeyIndex];
+        if (!currentKey || currentKey.destroyed) return;
+
+        console.log('현재 활성화된 키:', this.activeKeyIndex);
+
+        // 키보드 입력 처리
+        this.input.keyboard.off('keydown'); // 이전 이벤트 리스너 제거
+        this.input.keyboard.on('keydown', (event) => {
+            let action = null;
+            if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT) action = 'left';
+            else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN) action = 'down';
+            else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.RIGHT) action = 'right';
+
+            if (action) {
+                console.log('입력된 액션:', action);
+                this.processSpecialCommandInput(action);
+            }
+        });
+
+        // 버튼 클릭 처리 - 기존 이벤트 리스너 제거 후 새로 등록
+        ['left', 'down', 'right'].forEach(dir => {
+            if (this.commandButtons[dir]) {
+                this.commandButtons[dir].off('pointerdown');
+                this.commandButtons[dir].on('pointerdown', () => {
+                    if (this.specialStepInputEnabled) {
+                        console.log('버튼 클릭:', dir);
+                        this.processSpecialCommandInput(dir);
+                    }
+                });
+            }
+        });
+    }
+    /*
+        processSpecialCommandInput(action) {
+            const activeKeyIndex = this.specialCommandKeys.findIndex(key => key.active);
+            if (activeKeyIndex === -1) return;
+    
+            const currentKey = this.specialCommandKeys[activeKeyIndex];
+    
+            // 액션이 맞는지 확인
+            if (action === currentKey.action) {
+                // 성공 애니메이션
+                this.tweens.add({
+                    targets: currentKey,
+                    y: currentKey.y - 50,
+                    alpha: 0,
+                    duration: 400,
+                    onComplete: () => {
+                        currentKey.destroy();
+    
+                        // 남은 키들 앞으로 당기기 - 크기 변경 없이 이동만
+                        for (let i = activeKeyIndex + 1; i < this.specialCommandKeys.length; i++) {
+                            const key = this.specialCommandKeys[i];
+                            this.tweens.add({
+                                targets: key,
+                                x: 238 + ((i - activeKeyIndex - 1) * 24), // 간격 24로 유지
+                                duration: 300
+                            });
+                        }
+    
+                        // 다음 키 활성화 - 크기 변경 없이 색상만 변경
+                        if (activeKeyIndex + 1 < this.specialCommandKeys.length) {
+                            const nextKey = this.specialCommandKeys[activeKeyIndex + 1];
+                            nextKey.active = true;
+                            // 색상만 변경
+                            let activeKeyImageKey =
+                                nextKey.action === 'left' ? 'left_key_img' :
+                                    nextKey.action === 'down' ? 'down_key_img' : 'right_key_img';
+                            nextKey.setTexture(activeKeyImageKey);
+                            this.handleSpecialCommand();
+                        } else {
+                            // 모든 키 완료
+                            this.goToNextSpecialStep();
+                        }
+                    }
+                });
+            } else {
+                // 틀린 입력 - 흔들림 효과
+                this.tweens.add({
+                    targets: currentKey,
+                    x: currentKey.x + 5,
+                    duration: 50,
+                    yoyo: true,
+                    repeat: 2,
+                    onComplete: () => {
+                        this.handleSpecialCommand();
+                    }
+                });
+            }
+        }*/
+    processSpecialCommandInput(action) {
+        const currentKey = this.specialCommandKeys[this.activeKeyIndex];
+
+        if (!currentKey) return;
+
+        console.log('현재 활성화된 키:', this.activeKeyIndex);
+        console.log('입력된 액션:', action);
+        console.log('현재 키 액션:', currentKey.action);
+
+        if (action === currentKey.action) {
+            console.log('올바른 액션 입력됨');
+
+            // 현재 키 비활성화 및 날아가는 애니메이션
+            currentKey.active = false;
+            this.tweens.add({
+                targets: currentKey,
+                y: currentKey.y - 50,
+                alpha: 0,
+                duration: 400,
+                onComplete: () => {
+                    currentKey.destroy();
+
+                    // 남은 키들 앞으로 당기기
+                    for (let i = this.activeKeyIndex + 1; i < this.specialCommandKeys.length; i++) {
+                        const key = this.specialCommandKeys[i];
+                        if (key && !key.destroyed) {
+                            this.tweens.add({
+                                targets: key,
+                                x: 238 + ((i - this.activeKeyIndex - 1) * 24),
+                                duration: 300
+                            });
+                        }
+                    }
+
+                    // 다음 키 활성화
+                    this.activeKeyIndex++;
+                    if (this.activeKeyIndex < this.specialCommandKeys.length) {
+                        const nextKey = this.specialCommandKeys[this.activeKeyIndex];
+                        if (nextKey && !nextKey.destroyed) {
+                            nextKey.active = true;
+                            nextKey.setTexture(`${nextKey.action}_key_img`);
+
+                            // 단계가 바뀌었는지 확인
+                            if (nextKey.stepIndex !== currentKey.stepIndex) {
+                                this.displaySpecialStepContent(nextKey.stepIndex);
+                            }
+                        }
+                    } else {
+                        // 모든 키 완료
+                        this.goToNextSpecialStep();
+                    }
+                }
+            });
+        } else {
+            // 틀린 입력 - 흔들림 효과
+            this.tweens.add({
+                targets: currentKey,
+                x: currentKey.x + 5,
+                duration: 50,
+                yoyo: true,
+                repeat: 2
+            });
+        }
+    }
+
+    goToNextSpecialStep() {
+        console.log('goToNextSpecialStep 호출됨');
+
+        // 현재 스텝 완료 처리
+        this.specialStepInputEnabled = false;
+        console.log('현재 스텝:', this.currentSpecialStep);
+
+        if (this.messageTextObject) {
+            this.messageTextObject.setText(this.specialData.completeMessage);
+        }
+
+        // 모든 키가 완료되었으므로 바로 정리 시작
+        this.time.delayedCall(2500, () => {
+            console.log('모든 스텝 완료, 정리 시작');
+            this.cleanupSpecialRound();
+        });
+    }
+    /*
+        goToNextSpecialStep() {
+            // 현재 스텝 완료 처리
+            this.specialStepInputEnabled = false;
+    
+            // 이미지/텍스트 페이드아웃
+            this.tweens.add({
+                targets: [this.specialStepImage, this.specialStepText],
+                alpha: 0,
+                duration: 500,
+                onComplete: () => {
+                    // 다음 스텝 시작
+                    this.currentSpecialStep++;
+                    if (this.currentSpecialStep < this.specialData.steps.length) {
+                        this.displaySpecialStepContent(this.currentSpecialStep);
+                        this.initializeSpecialCommandKeys();
+                    } else {
+                        // special round 완료
+                        this.time.delayedCall(2000, () => {
+                            this.cleanupSpecialRound();
+                        });
+                    }
+                }
+            });
+        }*/
+
+    startSpecialStepSequence(stepIndex) {
         // 이전 step UI 제거
         if (this.specialStepImage) this.specialStepImage.destroy();
         if (this.specialStepText) this.specialStepText.destroy();
         if (this.specialCommandKeys) this.specialCommandKeys.forEach(img => img.destroy());
         this.specialCommandKeys = [];
 
-        // 마지막 단계 완료 시
-        if (stepIndex >= specialData.steps.length) {
-            if (this.specialStepText) this.specialStepText.destroy();
-            this.specialStepText = this.add.text(80, 540, specialData.completeMessage, {
-                font: '20px "머니그라피"',
-                fill: '#303030',
-                align: 'center',
-                wordWrap: { width: 280 }
-            }).setOrigin(0, 0).setDepth(27);
+        // 1. 텍스트창 업데이트
+        if (this.messageTextObject) {
+            this.messageTextObject.setText("종이팩의 재활용 과정을 알아보자!");
+            this.messageTextObject.setVisible(true);
+        }
 
-            // 2초 후 애니메이션 사라지고 complete 화면으로
+        // 마지막 단계 완료 시
+        if (stepIndex >= this.specialData.steps.length) {
+            // 메시지 표시
+            if (this.messageTextObject) {
+                this.messageTextObject.setText(this.specialData.completeMessage);
+            }
+            // 2초 후 정리 시작
             this.time.delayedCall(2000, () => {
                 this.cleanupSpecialRound();
             });
@@ -3767,99 +4412,61 @@ class GameScene extends Phaser.Scene {
         }
 
         // 현재 step 데이터
-        const step = specialData.steps[stepIndex];
+        const step = this.specialData.steps[stepIndex];
 
-        // 이미지
-        this.specialStepImage = this.add.image(140, 400, step.imageKey)
-            .setDisplaySize(120, 120)
+        // 단계별 이미지 (왼쪽에서 40px, 위에서 358px)
+        this.specialStepImage = this.add.image(40, 358, step.imageKey)
             .setOrigin(0, 0)
+            .setDisplaySize(160, 160)
             .setDepth(27);
 
-        // 텍스트
-        this.specialStepText = this.add.text(80, 540, step.text, {
+        // 단계별 설명 (왼쪽에서 80px, 위에서 308px)
+        this.specialStepText = this.add.text(80, 308, step.text, {
             font: '20px "머니그라피"',
             fill: '#303030',
-            align: 'center',
-            wordWrap: { width: 280 }
+            align: 'center'
         }).setOrigin(0, 0).setDepth(27);
 
-        // 커맨드 키(여러 개면 반복)
-        let keyX = 120;
-        this.specialCommandKeys = [];
-        step.commands.forEach(cmd => {
-            let keyImg = this.add.image(keyX, 670, cmd.action === 'left' ? 'left_key_img' : cmd.action === 'down' ? 'down_key_img' : 'right_key_img')
-                .setDisplaySize(60, 60)
-                .setOrigin(0, 0)
-                .setDepth(28);
-            this.specialCommandKeys.push(keyImg);
-            keyX += 80;
-        });
+        // special round용 커맨드 키 생성 및 설정
+        this.setupSpecialCommandKeys(step);
 
-        // 입력 대기 플래그
-        this.specialStepInputEnabled = true;
-        this.specialStepCommands = step.commands.slice();
-        this.specialStepCommandIndex = 0;
+        // 첫 번째 커맨드 키만 활성화된 상태로 시작
+        this.handleNextSpecialCommand();
 
-        // 키 입력 리스너 (키보드/버튼 모두)
-        this.input.keyboard.once('keydown', (event) => {
-            if (!this.specialStepInputEnabled) return;
-            const action = event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT ? 'left'
-                : event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN ? 'down'
-                    : event.keyCode === Phaser.Input.Keyboard.KeyCodes.RIGHT ? 'right' : null;
-            if (action && action === this.specialStepCommands[this.specialStepCommandIndex].action) {
-                this.handleSpecialStepCommand(specialData, stepIndex);
-            }
-        });
-        // 버튼 입력도 동일하게 처리
-        ['left', 'down', 'right'].forEach(dir => {
-            this.commandButtons[dir].once('pointerdown', () => {
-                if (!this.specialStepInputEnabled) return;
-                if (dir === this.specialStepCommands[this.specialStepCommandIndex].action) {
-                    this.handleSpecialStepCommand(specialData, stepIndex);
-                }
-            });
-        });
-    }
-
-    handleSpecialStepCommand(specialData, stepIndex) {
-        // 커맨드 키 애니메이션(사라짐)
-        if (this.specialCommandKeys && this.specialCommandKeys[this.specialStepCommandIndex]) {
-            this.tweens.add({
-                targets: this.specialCommandKeys[this.specialStepCommandIndex],
-                alpha: 0,
-                duration: 200,
-                onComplete: () => {
-                    this.specialCommandKeys[this.specialStepCommandIndex].destroy();
-                }
-            });
-        }
-        this.specialStepInputEnabled = false;
-        // 다음 step으로
-        this.time.delayedCall(400, () => {
-            this.startSpecialStepSequence(specialData, stepIndex + 1);
-        });
+        // 현재 step 인덱스 저장
+        this.currentSpecialStep = stepIndex;
     }
 
     cleanupSpecialRound() {
-        // 이미지/텍스트/경고 애니메이션 제거
+        // 이전 요소들 제거
         if (this.specialStepImage) this.specialStepImage.destroy();
         if (this.specialStepText) this.specialStepText.destroy();
-        if (this.specialCommandKeys) this.specialCommandKeys.forEach(img => img.destroy());
+        if (this.specialCommandKeys) {
+            this.specialCommandKeys.forEach(key => key.destroy());
+        }
+
+        // 경고 슬라이드 왼쪽으로 이동하며 사라짐
         if (this.specialWarningSlide) {
             this.tweens.add({
                 targets: this.specialWarningSlide,
                 x: -1500,
-                duration: 1000,
+                duration: 1500,
                 onComplete: () => {
                     this.specialWarningSlide.destroy();
-                    if (this.preprocessingPopupBg) {
+                    if (this.specialPopupBg) {
+                        // 배경 페이드아웃
                         this.tweens.add({
-                            targets: this.preprocessingPopupBg,
+                            targets: this.specialPopupBg,
                             alpha: 0,
                             duration: 500,
                             onComplete: () => {
-                                this.preprocessingPopupBg.destroy();
-                                // complete 화면(결과 등)으로 이동
+                                this.specialPopupBg.destroy();
+                                // 특별 라운드 점수 추가
+                                this.score += 500;
+                                if (this.scoreText) {
+                                    this.scoreText.setText(`${this.score}`);
+                                }
+                                // 다음 레벨로 진행
                                 this.completeLevel();
                             }
                         });
@@ -3868,7 +4475,6 @@ class GameScene extends Phaser.Scene {
             });
         }
     }
-
 
     // resetCurrentRound 함수 수정
     resetCurrentRound() {
@@ -4462,7 +5068,7 @@ class ResultScene extends Phaser.Scene {
 
         this.resultContainer.add(
             this.add.text(60, 508,
-                `시간 보너스 x${this.resultData.timeBonus}  (${elapsedStr})`, {
+                `시간 스코어 x${this.resultData.timeBonus}  (${elapsedStr})`, {
                 font: '16px "머니그라피"',
                 fill: '#fff',
                 align: 'left'
@@ -4533,19 +5139,52 @@ class ResultScene extends Phaser.Scene {
 
     fadeOutAndNextLevel() {
         const nextLevel = (this.resultData.level || 1) + 1;
+
+        // 레벨 3 이후는 준비중 메시지 표시
+        if (nextLevel > 3) {
+            // 준비중 팝업 배경
+            const popupBg = this.add.rectangle(
+                220, 478,  // 화면 중앙
+                300, 200,  // 크기
+                0x000000,  // 배경색
+                0.8        // 투명도
+            ).setDepth(100);
+
+            // 준비중 메시지
+            const popupText = this.add.text(
+                220, 478,
+                '다음 레벨은\n준비중입니다!',
+                {
+                    font: '24px "머니그라피"',
+                    fill: '#ffffff',
+                    align: 'center'
+                }
+            ).setOrigin(0.5)
+                .setDepth(101);
+
+            // 2초 후 팝업 제거
+            this.time.delayedCall(2000, () => {
+                popupBg.destroy();
+                popupText.destroy();
+            });
+
+            return; // 다음 진행 중단
+        }
+
+        // 레벨 3 이하인 경우 기존 로직 실행
         const savedLevel = parseInt(localStorage.getItem('level') || '1', 10);
         if (nextLevel > savedLevel) {
             localStorage.setItem('level', nextLevel);
         }
+
         this.tweens.add({
             targets: this.resultContainer,
             alpha: 0,
             duration: 500,
             onComplete: () => {
-                // GameScene에 level+1 전달
                 this.scene.start('GameScene', {
-                    level: (this.resultData.level || 1) + 1,
-                    health: this.resultData.health // 추가
+                    level: nextLevel,
+                    health: this.resultData.health
                 });
             }
         });
