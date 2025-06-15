@@ -139,6 +139,16 @@ class GameScene extends Phaser.Scene {
                 messageCorrect: '정답이야!\n책은 종이 전용 수거함에 버려야 해!',
                 messageIncorrect: '오답이야!\n책의 배출 방법을 다시 생각해볼까?'
             },
+            {
+                id: 'localstock',
+                name: '비타민 가득 현미팩',
+                type: 1,
+                difficulty: 2,
+                correctBin: 'bin_pack',
+                messageInitial: '리필리 대표 제품인 로컬스톡 현미팩이 나타났어.\n어디에 분리배출 해야 할까?',
+                messageCorrect: '정답이야!\n현미팩은 종이팩팩 전용 수거함에 버려야 해!',
+                messageIncorrect: '오답이야!\n현미팩의 배출 방법을 다시 생각해볼까?'
+            },
             // Type 2 아이템들 (전처리 필요)
             {
                 id: 'milk_carton',
@@ -273,22 +283,23 @@ class GameScene extends Phaser.Scene {
                 requiresPreprocessing: true,
                 preprocessingSteps: [
                     {
-                        text: '물로 헹군 뒤',
+                        text: '물로 헹구고',
                         commands: [
                             { action: 'down', key: '↓', color: '#00FF00' }
                         ]
                     },
                     {
-                        text: '비닐을 제거해서',
+                        text: '말린 뒤',
                         commands: [
                             { action: 'left', key: '←', color: '#FF9500' },
-                            { action: 'left', key: '←', color: '#FF9500' }
+                            { action: 'right', key: '→', color: '#0080FF' }
                         ]
                     },
                     {
-                        text: '플라스틱 배출',
+                        text: '용기만 남긴 채 배출',
                         commands: [
-                            { action: 'right', key: '→', color: '#00FF00' }
+                            { action: 'down', key: '↓', color: '#00FF00' },
+                            { action: 'down', key: '↓', color: '#00FF00' }
                         ]
                     },
                 ],
@@ -306,7 +317,7 @@ class GameScene extends Phaser.Scene {
                 name: '유한킴벌리 핸드워시',
                 preprocessedName: '펼쳐서 말린 핸드워시',
                 type: 2,
-                difficulty: 4,
+                difficulty: 3,
                 correctBin: 'bin_pack',
                 requiresPreprocessing: true,
                 preprocessingSteps: [
