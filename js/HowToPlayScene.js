@@ -53,7 +53,7 @@ class HowToPlayScene extends Phaser.Scene {
             .on('pointerdown', () => {
                 // 씬 매니저를 통한 직접 전환
                 this.scene.stop('HowToPlayScene');
-                this.scene.run('BootScene');
+                this.scene.run('BootScene', { skipAnimation: true });
             });
 
         // 첫 페이지에서는 이전 버튼 숨김

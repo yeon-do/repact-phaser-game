@@ -17,10 +17,8 @@ class BootScene extends Phaser.Scene {
 
     preload() {
         // 배경 이미지 로드
-        //this.load.image('background_img', 'assets/images/main_background.png');
-        // BootScene preload에 추가
-        this.load.image('bin_lid_img', 'assets/images/bin_lid.png');
-        this.load.image('title_img', 'assets/images/title.png');
+        this.load.image('background_img', 'assets/images/main_background.png');
+
         // 선택 바 이미지 로드
         this.load.image('selection_bar', 'assets/images/white_bar.png');
     }
@@ -40,8 +38,13 @@ class BootScene extends Phaser.Scene {
         // 로그인된 유저 이름 가져오기 - name을 우선적으로 사용
         this.userName = localStorage.getItem('name') || localStorage.getItem('username') || '000';
 
-        // 메뉴 아이템 생성
-        this.createMenuItems();
+        // 마이페이지 메뉴 텍스트 업데이트
+        //this.menuItems[2].text = `${this.userName} 마이페이지`;
+
+        // 배경 이미지 설정
+        this.add.image(0, 0, 'background_img')
+            .setOrigin(0, 0)
+            .setDisplaySize(width, height);
 
         // 선택 바 생성 (처음에는 보이지 않음)
         this.selectionBar = this.add.image(40, 520, 'selection_bar')
@@ -50,95 +53,21 @@ class BootScene extends Phaser.Scene {
             .setVisible(false)
             .setAlpha(0);
 
-        this.binLid = this.add.image(40, 406, 'bin_lid_img')
-            .setOrigin(0, 0)
-            .setDepth(11);
+        // 메뉴 아이템 생성
+        this.createMenuItems();
 
-        // 제목 이미지(처음엔 숨김)
-        this.titleImage = this.add.image(40, 280, 'title_img')
-            .setOrigin(0, 0)
-            .setAlpha(0)
-            .setVisible(false)
-            .setDepth(12);
-
-        // 메뉴, 선택바 숨김
-        this.menuTexts.forEach(text => text.setVisible(false));
-        this.selectionBar.setVisible(false);
+        // 입력 이벤트 설정
+        this.input.on('pointerdown', this.handleMenuClick, this);
 
         // 검은색 오버레이 생성 (처음에는 투명하게)
-        this.blackOverlay = this.add.rectangle(0, 0, width, height, 0x3cbb89)
+        this.blackOverlay = this.add.rectangle(0, 0, this.sys.game.canvas.width, this.sys.game.canvas.height, 0x3cbb89)
             .setOrigin(0, 0)
             .setAlpha(0)
-            .setDepth(100)
+            .setDepth(100) // 가장 위에 표시
             .setVisible(false);
 
         this.fadeInOverlay();
 
-        // 애니메이션 스킵 여부 확인
-        const skipAnimation = this.scene.settings.data?.skipAnimation || false;
-
-        // 메뉴, 선택바, 제목 모두 숨김
-        this.menuTexts.forEach(text => text.setVisible(false));
-        this.selectionBar.setVisible(false);
-        this.titleImage.setVisible(false);
-        this.binLid.setVisible(true);
-
-        if (skipAnimation) {
-            // 애니메이션 없이 바로 메뉴/제목 보이기
-            this.titleImage.setVisible(true).setAlpha(1);
-            this.menuTexts.forEach(text => text.setVisible(true).setAlpha(1));
-            this.selectionBar.setVisible(true).setAlpha(1);
-            this.binLid.setVisible(false); // 뚜껑 숨김
-
-            // 메뉴 등장 후에만 클릭 이벤트 등록
-            this.input.on('pointerdown', this.handleMenuClick, this);
-        } else {
-            // 애니메이션 모드: 클릭 시 뚜껑 열기
-            this.input.once('pointerdown', this.playBinOpenAnimation, this);
-            // 메뉴 클릭 이벤트는 playBinOpenAnimation에서 등록
-        }
-    }
-
-    playBinOpenAnimation() {
-        // 뚜껑 위로 날아감
-        this.tweens.add({
-            targets: this.binLid,
-            y: this.binLid.y - 180,
-            angle: 0,
-            alpha: 0,
-            duration: 700,
-            ease: 'Cubic.easeIn',
-            onComplete: () => {
-                this.binLid.setVisible(false);
-            }
-        });
-
-        // 제목 페이드인
-        this.titleImage.setVisible(true);
-        this.tweens.add({
-            targets: this.titleImage,
-            alpha: 1,
-            duration: 600,
-            delay: 400
-        });
-
-        // 메뉴 페이드인
-        this.time.delayedCall(700, () => {
-            this.menuTexts.forEach((text, i) => {
-                text.setVisible(true);
-                text.setAlpha(0);
-                this.tweens.add({
-                    targets: text,
-                    alpha: 1,
-                    duration: 400,
-                    delay: i * 100
-                });
-            });
-            this.selectionBar.setVisible(true);
-
-            // 메뉴가 모두 등장한 후에 클릭 이벤트 등록
-            this.input.on('pointerdown', this.handleMenuClick, this);
-        });
     }
 
     createMenuItems() {
@@ -249,9 +178,9 @@ class BootScene extends Phaser.Scene {
         if (selectedItem.scene === 'GameScene') {
             const userLevel = parseInt(localStorage.getItem('level') || '1', 10);
             this.fadeOutOverlay(() => {
-                //this.scene.start('GameScene', { level: 2, health: 3, fromBlackOverlay: true });
+                this.scene.start('GameScene', { level: 2, health: 3, fromBlackOverlay: true });
 
-                this.scene.start('GameScene', { level: userLevel, health: 3, fromBlackOverlay: true });
+                // this.scene.start('GameScene', { level: userLevel, health: 3, fromBlackOverlay: true });
             });
         } else {
             // 나머지 씬은 기존대로
