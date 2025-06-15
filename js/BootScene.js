@@ -72,7 +72,7 @@ class BootScene extends Phaser.Scene {
             .setDepth(100)
             .setVisible(false);
 
-        this.fadeInOverlay();
+        //this.fadeInOverlay();
 
         // 애니메이션 스킵 여부 확인
         const skipAnimation = this.scene.settings.data?.skipAnimation || false;
