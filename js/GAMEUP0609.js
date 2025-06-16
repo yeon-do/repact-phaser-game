@@ -8,6 +8,8 @@ class GameScene extends Phaser.Scene {
         // 터치 딜레이 추가
         this.lastTouchTime = 0;
         this.canClick = true;  // 클릭 가능 상태 추가
+        this.specialInputLock = false;
+
 
         // === 게임 진행 관련 변수 ===
         this.level = 2; // 현재 레벨
@@ -17,15 +19,12 @@ class GameScene extends Phaser.Scene {
         this.health = 3; // 체력 변수 (하트 3개)
         this.AVERAGE_LEVEL_TIME = 60 * 1000; // 60초(밀리초) 기준
 
-        this._specialKeydownHandler = null;
-        this._specialPointerHandlers = { left: null, down: null, right: null };
-
 
         // 레벨별 아이템 데이터
         this.levelRounds = {
             1: [
-                { round: 1, itemId: 'handwash', type: 2 },
-                //{ round: 2, itemId: 'localstock', type: 1 },
+                //{ round: 1, itemId: 'handwash', type: 2 },
+                { round: 1, itemId: 'localstock', type: 1 },
                 //{ round: 3, itemId: 'heimili', type: 2 },
                 { round: 2, isSpecial: true } // 스페셜 라운드 플래그
             ],
@@ -4345,8 +4344,10 @@ class GameScene extends Phaser.Scene {
         // 입력 처리 시작
         this.handleSpecialCommand();
     }
+
+    // handleSpecialCommand는 special round 시작 시 딱 한 번만 호출!
     handleSpecialCommand() {
-        // 이전 이벤트 리스너 제거
+        // 이전 리스너 제거
         if (this._specialKeydownHandler) {
             this.input.keyboard.off('keydown', this._specialKeydownHandler);
         }
@@ -4356,8 +4357,9 @@ class GameScene extends Phaser.Scene {
             }
         });
 
-        // 새로운 이벤트 리스너 등록
+        // 새로운 리스너 등록 (딱 한 번만!)
         this._specialKeydownHandler = (event) => {
+            if (this.specialInputLock) return;
             let action = null;
             if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT) action = 'left';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN) action = 'down';
@@ -4367,7 +4369,10 @@ class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown', this._specialKeydownHandler);
 
         ['left', 'down', 'right'].forEach(dir => {
-            this._specialPointerHandlers[dir] = () => this.processSpecialCommandInput(dir);
+            this._specialPointerHandlers[dir] = () => {
+                if (this.specialInputLock) return;
+                this.processSpecialCommandInput(dir);
+            };
             if (this.commandButtons[dir]) {
                 this.commandButtons[dir].on('pointerdown', this._specialPointerHandlers[dir]);
             }
@@ -4375,9 +4380,14 @@ class GameScene extends Phaser.Scene {
     }
 
     processSpecialCommandInput(action) {
+        if (this.specialInputLock) return;
+        this.specialInputLock = true;
         const currentKey = this.specialCommandKeys[this.activeKeyIndex];
 
-        if (!currentKey) return;
+        if (!currentKey) {
+            this.specialInputLock = false;
+            return;
+        }
 
         console.log('현재 활성화된 키:', this.activeKeyIndex);
         console.log('입력된 액션:', action);
@@ -4405,7 +4415,9 @@ class GameScene extends Phaser.Scene {
                                 x: 238 + ((i - this.activeKeyIndex - 1) * 24),
                                 duration: 300
                             });
+
                         }
+
                     }
 
                     // 다음 키 활성화
@@ -4425,6 +4437,7 @@ class GameScene extends Phaser.Scene {
                         // 모든 키 완료
                         this.goToNextSpecialStep();
                     }
+                    this.specialInputLock = false; // 처리 끝나면 해제
                 }
             });
         } else {
@@ -4434,7 +4447,10 @@ class GameScene extends Phaser.Scene {
                 x: currentKey.x + 5,
                 duration: 50,
                 yoyo: true,
-                repeat: 2
+                repeat: 2,
+                onComplete: () => {
+                    this.specialInputLock = false; // 처리 끝나면 해제
+                }
             });
         }
     }
@@ -4541,6 +4557,16 @@ class GameScene extends Phaser.Scene {
         if (this.specialCommandKeys) {
             this.specialCommandKeys.forEach(key => key.destroy());
         }
+        if (this._specialKeydownHandler) {
+            this.input.keyboard.off('keydown', this._specialKeydownHandler);
+            this._specialKeydownHandler = null;
+        }
+        ['left', 'down', 'right'].forEach(dir => {
+            if (this.commandButtons[dir] && this._specialPointerHandlers[dir]) {
+                this.commandButtons[dir].off('pointerdown', this._specialPointerHandlers[dir]);
+                this._specialPointerHandlers[dir] = null;
+            }
+        });
 
         // 경고 슬라이드 왼쪽으로 이동하며 사라짐
         if (this.specialWarningSlide) {
