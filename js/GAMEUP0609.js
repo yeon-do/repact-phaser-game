@@ -20,9 +20,9 @@ class GameScene extends Phaser.Scene {
 
         // 레벨별 아이템 데이터
         this.levelRounds = {
-            1: [
-                { round: 1, itemId: 'handwash', type: 2 },
-                //{ round: 2, itemId: 'localstock', type: 1 },
+            /*1: [
+                //{ round: 1, itemId: 'handwash', type: 2 },
+                { round: 1, itemId: 'localstock', type: 1 },
                 //{ round: 3, itemId: 'heimili', type: 2 },
                 { round: 2, isSpecial: true } // 스페셜 라운드 플래그
             ],
@@ -32,7 +32,7 @@ class GameScene extends Phaser.Scene {
                 { round: 3, itemId: 'deliverplastic', type: 2 },
                 { round: 4, itemId: 'newspaper', type: 1 },
                 { round: 5, itemId: 'chicken_bone', type: 3 }
-            ],/*
+            ],*/
             1: [
                 //{ round: 1, itemId: 'handwash', type: 3 },
                 { round: 1, itemId: 'glass_bottle', type: 1 },
@@ -42,19 +42,19 @@ class GameScene extends Phaser.Scene {
                 { round: 5, itemId: 'chicken_bone', type: 3 }
             ],
             2: [
+                { round: 1, itemId: 'can', type: 1 },
+                { round: 2, itemId: 'tang', type: 3 },
+                { round: 3, itemId: 'book', type: 1 },
+                { round: 4, itemId: 'deliverplastic', type: 2 },
+                { round: 5, itemId: 'soimilk', type: 2 }
+            ],
+            3: [
                 { round: 1, itemId: 'handwash', type: 2 },
                 { round: 2, itemId: 'localstock', type: 1 },
                 { round: 3, itemId: 'heimili', type: 2 },
                 { round: 4, isSpecial: true } // 스페셜 라운드 플래그
 
             ],
-            3: [
-                { round: 1, itemId: 'can', type: 1 },
-                { round: 2, itemId: 'tang', type: 3 },
-                { round: 3, itemId: 'book', type: 1 },
-                { round: 4, itemId: 'deliverplastic', type: 2 },
-                { round: 5, itemId: 'soimilk', type: 2 }
-            ],*/
             // ...추가 레벨...
         };
         this.getRoundData = () => this.levelRounds[this.level] || [];
@@ -3822,9 +3822,9 @@ class GameScene extends Phaser.Scene {
         console.log('GameScene: 다음 라운드로 진행, 현재:', this.currentRound, '-> 다음:', this.currentRound + 1);
         this.fallCount = 0;
 
-        if (this.level === 1 && this.currentRound === 1) {
+        if (this.level === 3 && this.currentRound === 3) {
             // 3라운드 끝나면 3초 후 스페셜 라운드 진입
-            this.time.delayedCall(2000, () => {
+            this.time.delayedCall(1500, () => {
                 this.startSpecialRound();
             });
             return;
@@ -4343,17 +4343,35 @@ class GameScene extends Phaser.Scene {
         this.handleSpecialCommand();
     }
     handleSpecialCommand() {
-        // 이전 키보드 리스너 제거
+        // 이전 이벤트 리스너 제거
         this.input.keyboard.off('keydown');
+        ['left', 'down', 'right'].forEach(dir => {
+            if (this.commandButtons[dir]) {
+                this.commandButtons[dir].off('pointerdown');
+            }
+        });
 
-        // 키보드 이벤트만 등록 (버튼은 createCommandButtons에서 이미 처리)
+        // 새로운 이벤트 리스너 등록
+        const handleInput = (action) => {
+            if (!this.specialStepInputEnabled) return;
+            this.processSpecialCommandInput(action);
+        };
+
+        // 키보드 이벤트
         this.input.keyboard.on('keydown', (event) => {
             let action = null;
             if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT) action = 'left';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN) action = 'down';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.RIGHT) action = 'right';
 
-            if (action) this.processSpecialCommandInput(action);
+            if (action) handleInput(action);
+        });
+
+        // 터치 이벤트
+        ['left', 'down', 'right'].forEach(dir => {
+            if (this.commandButtons[dir]) {
+                this.commandButtons[dir].on('pointerdown', () => handleInput(dir));
+            }
         });
     }
     /*
