@@ -3,6 +3,9 @@ class HowToPlayScene extends Phaser.Scene {
         super('HowToPlayScene');
         this.currentPage = 1;
         this.totalPages = 8;
+        this.canClick = true;  // 클릭 가능 상태 추가
+        this.lastTouchTime = 0;  // 마지막 터치 시간 추가
+
     }
 
     preload() {
@@ -36,15 +39,25 @@ class HowToPlayScene extends Phaser.Scene {
         this.prevButton = this.add.image(12, 377, 'left')
             .setInteractive()
             .setOrigin(0, 0)
-            .setDisplaySize(80, 85)
-            .on('pointerdown', () => this.changePage(-1));
+            .setDisplaySize(65, 70)
+            .on('pointerdown', () => {
+                if (this.canClick && this.checkTouchDelay()) {
+                    this.changePage(-1);
+                    this.disableClickTemporarily();
+                }
+            });
 
-        // 다음 버튼 
-        this.nextButton = this.add.image(348, 377, 'right')
+        // 다음 버튼
+        this.nextButton = this.add.image(363, 377, 'right')
             .setInteractive()
             .setOrigin(0, 0)
-            .setDisplaySize(80, 85)
-            .on('pointerdown', () => this.changePage(1));
+            .setDisplaySize(65, 70)
+            .on('pointerdown', () => {
+                if (this.canClick && this.checkTouchDelay()) {
+                    this.changePage(1);
+                    this.disableClickTemporarily();
+                }
+            });
 
         // 뒤로가기 버튼 (상단)
         const backButton = this.add.image(50, 50, 'back_button')
@@ -72,6 +85,24 @@ class HowToPlayScene extends Phaser.Scene {
             onComplete: () => {
                 this.blackOverlay.destroy();
             }
+        });
+    }
+
+    // 터치 딜레이 체크 메서드 추가
+    checkTouchDelay() {
+        const currentTime = new Date().getTime();
+        if (currentTime - this.lastTouchTime < 300) { // 300ms 내 터치는 무시
+            return false;
+        }
+        this.lastTouchTime = currentTime;
+        return true;
+    }
+
+    // disableClickTemporarily 메서드 수정
+    disableClickTemporarily() {
+        this.canClick = false;
+        this.time.delayedCall(300, () => {  // 300ms로 늘림
+            this.canClick = true;
         });
     }
 

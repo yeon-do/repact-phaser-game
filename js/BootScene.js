@@ -28,6 +28,8 @@ class BootScene extends Phaser.Scene {
     create() {
         // 씬이 시작될 때마다 전환 상태 초기화
         this.isTransitioning = false;
+        // 선택된 메뉴 인덱스 초기화 추가
+        this.selectedMenuIndex = -1;
 
         // HowToPlayScene에서 돌아왔는지 체크
         if (localStorage.getItem('returnToBootScene') === 'true') {
@@ -87,7 +89,7 @@ class BootScene extends Phaser.Scene {
             // 애니메이션 없이 바로 메뉴/제목 보이기
             this.titleImage.setVisible(true).setAlpha(1);
             this.menuTexts.forEach(text => text.setVisible(true).setAlpha(1));
-            this.selectionBar.setVisible(true).setAlpha(1);
+            this.selectionBar.setVisible(false).setAlpha(0); // 선택 바 초기 상태 설정
             this.binLid.setVisible(false); // 뚜껑 숨김
 
             // 메뉴 등장 후에만 클릭 이벤트 등록
@@ -98,6 +100,7 @@ class BootScene extends Phaser.Scene {
             // 메뉴 클릭 이벤트는 playBinOpenAnimation에서 등록
         }
     }
+
 
     playBinOpenAnimation() {
         // 뚜껑 위로 날아감

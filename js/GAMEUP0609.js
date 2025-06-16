@@ -5,6 +5,9 @@ class GameScene extends Phaser.Scene {
         localStorage.clear();
         sessionStorage.clear();
         console.log('GameScene: Constructor 실행.');
+        // 터치 딜레이 추가
+        this.lastTouchTime = 0;
+        this.canClick = true;  // 클릭 가능 상태 추가
 
         // === 게임 진행 관련 변수 ===
         this.level = 2; // 현재 레벨
@@ -374,7 +377,7 @@ class GameScene extends Phaser.Scene {
             {
                 id: 'heimili',
                 name: '헤이밀리 주방 세제',
-                preprocessedName: '플라스틱을 제거한 세재 팩',
+                preprocessedName: '플라스틱을 제거한 세재팩',
                 type: 2,
                 difficulty: 3,
                 correctBin: 'bin_pack',
@@ -394,7 +397,7 @@ class GameScene extends Phaser.Scene {
                         ]
                     },
                     {
-                        text: '펼차고',
+                        text: '펼치고',
                         commands: [
                             { action: 'left', key: '←', color: '#FF9500' },
                             { action: 'right', key: '→', color: '#0080FF' }
@@ -1130,7 +1133,7 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    createCommandButtons() {
+    /*createCommandButtons() {
         const { width } = this.sys.game.canvas;
         // 기존 버튼이 있으면 먼저 제거
         if (this.commandButtons.left) {
@@ -1240,7 +1243,134 @@ class GameScene extends Phaser.Scene {
 
         // 중요: common 컨테이너에 추가
         this.uiContainers.common.add(this.commandButtons.right);
+    }*/
+
+
+    createCommandButtons() {
+        // 기존 버튼이 있으면 먼저 제거
+        if (this.commandButtons.left) this.commandButtons.left.destroy();
+        if (this.commandButtons.down) this.commandButtons.down.destroy();
+        if (this.commandButtons.right) this.commandButtons.right.destroy();
+
+        const buttonSize = 80;
+        const buttonHeight = 85;
+
+        // 왼쪽 버튼 생성 및 이벤트 설정
+        this.commandButtons.left = this.add.image(70, 760, 'button_left_img')
+            .setDisplaySize(buttonSize, buttonHeight)
+            .setOrigin(0, 0)
+            .setInteractive();
+
+        // 가운데 버튼 생성 및 이벤트 설정
+        this.commandButtons.down = this.add.image(180, 760, 'button_down_img')
+            .setDisplaySize(buttonSize, buttonHeight)
+            .setOrigin(0, 0)
+            .setInteractive();
+
+        // 오른쪽 버튼 생성 및 이벤트 설정
+        this.commandButtons.right = this.add.image(290, 760, 'button_right_img')
+            .setDisplaySize(buttonSize, buttonHeight)
+            .setOrigin(0, 0)
+            .setInteractive();
+
+        // 이벤트 리스너 설정
+        const setupButtonListeners = (button, direction, pressedTexture, normalTexture) => {
+            button.removeAllListeners();
+
+            button.on('pointerdown', () => {
+                // Type 2나 Special Round일 때만 터치 제어 적용
+                if ((this.isProcessingResult && this.currentGameType === 2) ||
+                    this.specialStepInputEnabled) {
+
+                    // 두 조건 모두 체크
+                    if (this.canClick && this.checkTouchDelay()) {
+                        button.setTexture(pressedTexture);
+
+                        if (this.isProcessingResult && this.currentGameType === 2) {
+                            this.handlePreprocessingCommand(direction);
+                        } else if (this.specialStepInputEnabled) {
+                            this.processSpecialCommandInput(direction);
+                        }
+
+                        // 터치 후 일시적으로 클릭 비활성화
+                        this.disableClickTemporarily();
+                    }
+                } else {
+                    // 일반 게임플레이 상태일 때는 즉시 반응
+                    switch (direction) {
+                        case 'left':
+                            this.moveLeft = true;
+                            break;
+                        case 'down':
+                            this.moveDownFast = true;
+                            break;
+                        case 'right':
+                            this.moveRight = true;
+                            break;
+                    }
+                }
+            });
+
+            button.on('pointerup', () => {
+                button.setTexture(normalTexture);
+                switch (direction) {
+                    case 'left':
+                        this.moveLeft = false;
+                        break;
+                    case 'down':
+                        this.moveDownFast = false;
+                        break;
+                    case 'right':
+                        this.moveRight = false;
+                        break;
+                }
+            });
+
+            button.on('pointerout', () => {
+                button.setTexture(normalTexture);
+                switch (direction) {
+                    case 'left':
+                        this.moveLeft = false;
+                        break;
+                    case 'down':
+                        this.moveDownFast = false;
+                        break;
+                    case 'right':
+                        this.moveRight = false;
+                        break;
+                }
+            });
+        };
+
+        // 각 버튼에 리스너 설정
+        setupButtonListeners(this.commandButtons.left, 'left', 'button_left_pressed_img', 'button_left_img');
+        setupButtonListeners(this.commandButtons.down, 'down', 'button_down_pressed_img', 'button_down_img');
+        setupButtonListeners(this.commandButtons.right, 'right', 'button_right_pressed_img', 'button_right_img');
+
+        // 버튼들을 common 컨테이너에 추가
+        this.uiContainers.common.add(this.commandButtons.left);
+        this.uiContainers.common.add(this.commandButtons.down);
+        this.uiContainers.common.add(this.commandButtons.right);
     }
+
+    // 터치 딜레이 체크
+    checkTouchDelay() {
+        const currentTime = new Date().getTime();
+        if (currentTime - this.lastTouchTime < 100) { // 100ms 내 터치는 무시
+            return false;
+        }
+        this.lastTouchTime = currentTime;
+        return true;
+    }
+
+    // 클릭 일시 비활성화
+    disableClickTemporarily() {
+        this.canClick = false;
+        this.time.delayedCall(100, () => {  // 100ms 후 다시 활성화
+            this.canClick = true;
+        });
+    }
+
 
     createType2UI() {
         // Type 2는 기본적으로 Type 1과 같은 UI를 사용
@@ -2195,6 +2325,8 @@ class GameScene extends Phaser.Scene {
         if (this.commandKeyImages.length > 0) {
             this.commandKeyImages[0].active = true;
         }
+
+        //this.isProcessingCommand = false;
     }
 
 
@@ -2760,7 +2892,6 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    // ...existing code...
     handlePreprocessingCommand(action) {
         try {
             // special round 여부 확인
@@ -2894,7 +3025,29 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-
+    // 다음 키 활성화 함수 추가
+    activateNextKey(currentIndex) {
+        const nextIndex = currentIndex + 1;
+        if (nextIndex < this.commandKeyImages.length) {
+            const nextKey = this.commandKeyImages[nextIndex];
+            if (nextKey && nextKey.image) {
+                nextKey.active = true;
+                let activeKeyImageKey;
+                switch (nextKey.action) {
+                    case 'left': activeKeyImageKey = 'left_key_img'; break;
+                    case 'down': activeKeyImageKey = 'down_key_img'; break;
+                    case 'right': activeKeyImageKey = 'right_key_img'; break;
+                    default: activeKeyImageKey = 'down_key_img';
+                }
+                nextKey.image.setTexture(activeKeyImageKey);
+            }
+        } else {
+            // 모든 키 완료
+            this.time.delayedCall(1000, () => {
+                this.startCompletionSequence();
+            });
+        }
+    }
 
     updateItemImage(stepNumber) {
         try {
@@ -4100,6 +4253,7 @@ class GameScene extends Phaser.Scene {
 
         // 모든 커맨드 키 초기화 및 표시
         this.initializeSpecialCommandKeys();
+        //this.isProcessingCommand = false;
     }
 
     displaySpecialStepContent(stepIndex) {
@@ -4183,39 +4337,34 @@ class GameScene extends Phaser.Scene {
         this.handleSpecialCommand();
     }
     handleSpecialCommand() {
-        // special round에서만 동작
-        if (!this.specialStepInputEnabled) return;
+        // 이전 이벤트 리스너 제거
+        this.input.keyboard.off('keydown');
+        ['left', 'down', 'right'].forEach(dir => {
+            if (this.commandButtons[dir]) {
+                this.commandButtons[dir].off('pointerdown');
+            }
+        });
 
-        // 현재 활성화된 커맨드 찾기
-        const currentKey = this.specialCommandKeys[this.activeKeyIndex];
-        if (!currentKey || currentKey.destroyed) return;
+        // 새로운 이벤트 리스너 등록
+        const handleInput = (action) => {
+            if (!this.specialStepInputEnabled) return;
+            this.processSpecialCommandInput(action);
+        };
 
-        console.log('현재 활성화된 키:', this.activeKeyIndex);
-
-        // 키보드 입력 처리
-        this.input.keyboard.off('keydown'); // 이전 이벤트 리스너 제거
+        // 키보드 이벤트
         this.input.keyboard.on('keydown', (event) => {
             let action = null;
             if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT) action = 'left';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN) action = 'down';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.RIGHT) action = 'right';
 
-            if (action) {
-                console.log('입력된 액션:', action);
-                this.processSpecialCommandInput(action);
-            }
+            if (action) handleInput(action);
         });
 
-        // 버튼 클릭 처리 - 기존 이벤트 리스너 제거 후 새로 등록
+        // 터치 이벤트
         ['left', 'down', 'right'].forEach(dir => {
             if (this.commandButtons[dir]) {
-                this.commandButtons[dir].off('pointerdown');
-                this.commandButtons[dir].on('pointerdown', () => {
-                    if (this.specialStepInputEnabled) {
-                        console.log('버튼 클릭:', dir);
-                        this.processSpecialCommandInput(dir);
-                    }
-                });
+                this.commandButtons[dir].on('pointerdown', () => handleInput(dir));
             }
         });
     }
@@ -4528,6 +4677,8 @@ class GameScene extends Phaser.Scene {
         this.currentLaneIndex = 0;
         this.currentOpenBinIndex = -1;
 
+        //this.isProcessingCommand = false;
+
         this.spawnWasteItem();
     }
 
@@ -4809,6 +4960,7 @@ class GameScene extends Phaser.Scene {
 
         // 첫 번째 라운드 아이템 생성
         this.spawnWasteItem();
+        //this.isProcessingCommand = false;
 
         console.log('GameScene: 게임 상태 초기화 완료. 첫 아이템 생성.');
     }
