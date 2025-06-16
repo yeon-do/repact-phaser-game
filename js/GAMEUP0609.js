@@ -8,8 +8,6 @@ class GameScene extends Phaser.Scene {
         // 터치 딜레이 추가
         this.lastTouchTime = 0;
         this.canClick = true;  // 클릭 가능 상태 추가
-        this.specialInputLock = false;
-
 
         // === 게임 진행 관련 변수 ===
         this.level = 2; // 현재 레벨
@@ -23,8 +21,8 @@ class GameScene extends Phaser.Scene {
         // 레벨별 아이템 데이터
         this.levelRounds = {
             1: [
-                //{ round: 1, itemId: 'handwash', type: 2 },
-                { round: 1, itemId: 'localstock', type: 1 },
+                { round: 1, itemId: 'handwash', type: 2 },
+                //{ round: 2, itemId: 'localstock', type: 1 },
                 //{ round: 3, itemId: 'heimili', type: 2 },
                 { round: 2, isSpecial: true } // 스페셜 라운드 플래그
             ],
@@ -2513,7 +2511,7 @@ class GameScene extends Phaser.Scene {
         }
 
         // 1초 후 키 이미지 변경 (흐린 이미지 -> 밝은 이미지)
-        this.time.delayedCall(700, () => {
+        this.time.delayedCall(500, () => {
             currentKeyObj.image.setTexture(activeKeyImageKey);
             currentKeyObj.image.setDisplaySize(40, 43);
             currentKeyObj.image.setAlpha(1);
@@ -4344,57 +4342,95 @@ class GameScene extends Phaser.Scene {
         // 입력 처리 시작
         this.handleSpecialCommand();
     }
-
-    // handleSpecialCommand는 special round 시작 시 딱 한 번만 호출!
     handleSpecialCommand() {
-        // 이전 리스너 제거
-        if (this._specialKeydownHandler) {
-            this.input.keyboard.off('keydown', this._specialKeydownHandler);
-        }
-        ['left', 'down', 'right'].forEach(dir => {
-            if (this.commandButtons[dir] && this._specialPointerHandlers[dir]) {
-                this.commandButtons[dir].off('pointerdown', this._specialPointerHandlers[dir]);
-            }
-        });
+        // 이전 키보드 리스너 제거
+        this.input.keyboard.off('keydown');
 
-        // 새로운 리스너 등록 (딱 한 번만!)
-        this._specialKeydownHandler = (event) => {
-            if (this.specialInputLock) return;
+        // 키보드 이벤트만 등록 (버튼은 createCommandButtons에서 이미 처리)
+        this.input.keyboard.on('keydown', (event) => {
             let action = null;
             if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT) action = 'left';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN) action = 'down';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.RIGHT) action = 'right';
-            if (action) this.processSpecialCommandInput(action);
-        };
-        this.input.keyboard.on('keydown', this._specialKeydownHandler);
 
-        ['left', 'down', 'right'].forEach(dir => {
-            this._specialPointerHandlers[dir] = () => {
-                if (this.specialInputLock) return;
-                this.processSpecialCommandInput(dir);
-            };
-            if (this.commandButtons[dir]) {
-                this.commandButtons[dir].on('pointerdown', this._specialPointerHandlers[dir]);
-            }
+            if (action) this.processSpecialCommandInput(action);
         });
     }
-
+    /*
+     processSpecialCommandInput(action) {
+         const currentKey = this.specialCommandKeys[this.activeKeyIndex];
+ 
+         if (!currentKey) return;
+ 
+         console.log('현재 활성화된 키:', this.activeKeyIndex);
+         console.log('입력된 액션:', action);
+         console.log('현재 키 액션:', currentKey.action);
+ 
+         if (action === currentKey.action) {
+             console.log('올바른 액션 입력됨');
+ 
+             // 현재 키 비활성화 및 날아가는 애니메이션
+             currentKey.active = false;
+             this.tweens.add({
+                 targets: currentKey,
+                 y: currentKey.y - 50,
+                 alpha: 0,
+                 duration: 400,
+                 onComplete: () => {
+                     currentKey.destroy();
+ 
+                     // 남은 키들 앞으로 당기기
+                     for (let i = this.activeKeyIndex + 1; i < this.specialCommandKeys.length; i++) {
+                         const key = this.specialCommandKeys[i];
+                         if (key && !key.destroyed) {
+                             this.tweens.add({
+                                 targets: key,
+                                 x: 238 + ((i - this.activeKeyIndex - 1) * 24),
+                                 duration: 300
+                             });
+                         }
+                     }
+ 
+                     // 다음 키 활성화
+                     this.activeKeyIndex++;
+                     if (this.activeKeyIndex < this.specialCommandKeys.length) {
+                         const nextKey = this.specialCommandKeys[this.activeKeyIndex];
+                         if (nextKey && !nextKey.destroyed) {
+                             nextKey.active = true;
+                             nextKey.setTexture(`${nextKey.action}_key_img`);
+ 
+                             // 단계가 바뀌었는지 확인
+                             if (nextKey.stepIndex !== currentKey.stepIndex) {
+                                 this.displaySpecialStepContent(nextKey.stepIndex);
+                             }
+                         }
+                     } else {
+                         // 모든 키 완료
+                         this.goToNextSpecialStep();
+                     }
+                 }
+             });
+         } else {
+             // 틀린 입력 - 흔들림 효과
+             this.tweens.add({
+                 targets: currentKey,
+                 x: currentKey.x + 5,
+                 duration: 50,
+                 yoyo: true,
+                 repeat: 2
+             });
+         }
+     }*/
     processSpecialCommandInput(action) {
-        if (this.specialInputLock) return;
-        this.specialInputLock = true;
+        // 터치 딜레이 체크와 canClick 상태 확인 추가
+        if (!this.canClick || !this.checkTouchDelay()) return;
+
         const currentKey = this.specialCommandKeys[this.activeKeyIndex];
-
-        if (!currentKey) {
-            this.specialInputLock = false;
-            return;
-        }
-
-        console.log('현재 활성화된 키:', this.activeKeyIndex);
-        console.log('입력된 액션:', action);
-        console.log('현재 키 액션:', currentKey.action);
+        if (!currentKey) return;
 
         if (action === currentKey.action) {
-            console.log('올바른 액션 입력됨');
+            // 입력 처리 시작 전에 클릭 비활성화
+            this.disableClickTemporarily();
 
             // 현재 키 비활성화 및 날아가는 애니메이션
             currentKey.active = false;
@@ -4415,9 +4451,7 @@ class GameScene extends Phaser.Scene {
                                 x: 238 + ((i - this.activeKeyIndex - 1) * 24),
                                 duration: 300
                             });
-
                         }
-
                     }
 
                     // 다음 키 활성화
@@ -4437,7 +4471,6 @@ class GameScene extends Phaser.Scene {
                         // 모든 키 완료
                         this.goToNextSpecialStep();
                     }
-                    this.specialInputLock = false; // 처리 끝나면 해제
                 }
             });
         } else {
@@ -4447,10 +4480,7 @@ class GameScene extends Phaser.Scene {
                 x: currentKey.x + 5,
                 duration: 50,
                 yoyo: true,
-                repeat: 2,
-                onComplete: () => {
-                    this.specialInputLock = false; // 처리 끝나면 해제
-                }
+                repeat: 2
             });
         }
     }
@@ -4557,16 +4587,6 @@ class GameScene extends Phaser.Scene {
         if (this.specialCommandKeys) {
             this.specialCommandKeys.forEach(key => key.destroy());
         }
-        if (this._specialKeydownHandler) {
-            this.input.keyboard.off('keydown', this._specialKeydownHandler);
-            this._specialKeydownHandler = null;
-        }
-        ['left', 'down', 'right'].forEach(dir => {
-            if (this.commandButtons[dir] && this._specialPointerHandlers[dir]) {
-                this.commandButtons[dir].off('pointerdown', this._specialPointerHandlers[dir]);
-                this._specialPointerHandlers[dir] = null;
-            }
-        });
 
         // 경고 슬라이드 왼쪽으로 이동하며 사라짐
         if (this.specialWarningSlide) {
