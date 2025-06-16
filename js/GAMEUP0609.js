@@ -22,9 +22,9 @@ class GameScene extends Phaser.Scene {
         this.levelRounds = {
             1: [
                 { round: 1, itemId: 'handwash', type: 2 },
-                { round: 2, itemId: 'localstock', type: 1 },
-                { round: 3, itemId: 'heimili', type: 2 },
-                { round: 4, isSpecial: true } // 스페셜 라운드 플래그
+                //{ round: 2, itemId: 'localstock', type: 1 },
+                //{ round: 3, itemId: 'heimili', type: 2 },
+                { round: 2, isSpecial: true } // 스페셜 라운드 플래그
             ],
             2: [
                 { round: 1, itemId: 'can', type: 1 },
@@ -1273,18 +1273,20 @@ class GameScene extends Phaser.Scene {
             .setOrigin(0, 0)
             .setInteractive();
 
-        // 이벤트 리스너 설정
         const setupButtonListeners = (button, direction, pressedTexture, normalTexture) => {
-            button.removeAllListeners();
+            button.removeAllListeners(); // 기존 리스너 제거
+
+            let isProcessing = false; // 처리 중 플래그 추가
 
             button.on('pointerdown', () => {
+                if (isProcessing) return; // 처리 중이면 무시
+
                 // Type 2나 Special Round일 때만 터치 제어 적용
                 if ((this.isProcessingResult && this.currentGameType === 2) ||
                     this.specialStepInputEnabled) {
 
-                    // 두 조건 모두 체크
                     if (this.canClick && this.checkTouchDelay()) {
-                        button.setTexture(pressedTexture);
+                        isProcessing = true; // 처리 시작
 
                         if (this.isProcessingResult && this.currentGameType === 2) {
                             this.handlePreprocessingCommand(direction);
@@ -1292,8 +1294,12 @@ class GameScene extends Phaser.Scene {
                             this.processSpecialCommandInput(direction);
                         }
 
-                        // 터치 후 일시적으로 클릭 비활성화
                         this.disableClickTemporarily();
+
+                        // 처리 완료 후 플래그 해제
+                        this.time.delayedCall(300, () => {
+                            isProcessing = false;
+                        });
                     }
                 } else {
                     // 일반 게임플레이 상태일 때는 즉시 반응
@@ -3816,7 +3822,7 @@ class GameScene extends Phaser.Scene {
         console.log('GameScene: 다음 라운드로 진행, 현재:', this.currentRound, '-> 다음:', this.currentRound + 1);
         this.fallCount = 0;
 
-        if (this.level === 1 && this.currentRound === 3) {
+        if (this.level === 1 && this.currentRound === 1) {
             // 3라운드 끝나면 3초 후 스페셜 라운드 진입
             this.time.delayedCall(2000, () => {
                 this.startSpecialRound();
@@ -4369,74 +4375,80 @@ class GameScene extends Phaser.Scene {
         });
     }
     /*
-        processSpecialCommandInput(action) {
-            const activeKeyIndex = this.specialCommandKeys.findIndex(key => key.active);
-            if (activeKeyIndex === -1) return;
-    
-            const currentKey = this.specialCommandKeys[activeKeyIndex];
-    
-            // 액션이 맞는지 확인
-            if (action === currentKey.action) {
-                // 성공 애니메이션
-                this.tweens.add({
-                    targets: currentKey,
-                    y: currentKey.y - 50,
-                    alpha: 0,
-                    duration: 400,
-                    onComplete: () => {
-                        currentKey.destroy();
-    
-                        // 남은 키들 앞으로 당기기 - 크기 변경 없이 이동만
-                        for (let i = activeKeyIndex + 1; i < this.specialCommandKeys.length; i++) {
-                            const key = this.specialCommandKeys[i];
-                            this.tweens.add({
-                                targets: key,
-                                x: 238 + ((i - activeKeyIndex - 1) * 24), // 간격 24로 유지
-                                duration: 300
-                            });
-                        }
-    
-                        // 다음 키 활성화 - 크기 변경 없이 색상만 변경
-                        if (activeKeyIndex + 1 < this.specialCommandKeys.length) {
-                            const nextKey = this.specialCommandKeys[activeKeyIndex + 1];
-                            nextKey.active = true;
-                            // 색상만 변경
-                            let activeKeyImageKey =
-                                nextKey.action === 'left' ? 'left_key_img' :
-                                    nextKey.action === 'down' ? 'down_key_img' : 'right_key_img';
-                            nextKey.setTexture(activeKeyImageKey);
-                            this.handleSpecialCommand();
-                        } else {
-                            // 모든 키 완료
-                            this.goToNextSpecialStep();
-                        }
-                    }
-                });
-            } else {
-                // 틀린 입력 - 흔들림 효과
-                this.tweens.add({
-                    targets: currentKey,
-                    x: currentKey.x + 5,
-                    duration: 50,
-                    yoyo: true,
-                    repeat: 2,
-                    onComplete: () => {
-                        this.handleSpecialCommand();
-                    }
-                });
-            }
-        }*/
+     processSpecialCommandInput(action) {
+         const currentKey = this.specialCommandKeys[this.activeKeyIndex];
+ 
+         if (!currentKey) return;
+ 
+         console.log('현재 활성화된 키:', this.activeKeyIndex);
+         console.log('입력된 액션:', action);
+         console.log('현재 키 액션:', currentKey.action);
+ 
+         if (action === currentKey.action) {
+             console.log('올바른 액션 입력됨');
+ 
+             // 현재 키 비활성화 및 날아가는 애니메이션
+             currentKey.active = false;
+             this.tweens.add({
+                 targets: currentKey,
+                 y: currentKey.y - 50,
+                 alpha: 0,
+                 duration: 400,
+                 onComplete: () => {
+                     currentKey.destroy();
+ 
+                     // 남은 키들 앞으로 당기기
+                     for (let i = this.activeKeyIndex + 1; i < this.specialCommandKeys.length; i++) {
+                         const key = this.specialCommandKeys[i];
+                         if (key && !key.destroyed) {
+                             this.tweens.add({
+                                 targets: key,
+                                 x: 238 + ((i - this.activeKeyIndex - 1) * 24),
+                                 duration: 300
+                             });
+                         }
+                     }
+ 
+                     // 다음 키 활성화
+                     this.activeKeyIndex++;
+                     if (this.activeKeyIndex < this.specialCommandKeys.length) {
+                         const nextKey = this.specialCommandKeys[this.activeKeyIndex];
+                         if (nextKey && !nextKey.destroyed) {
+                             nextKey.active = true;
+                             nextKey.setTexture(`${nextKey.action}_key_img`);
+ 
+                             // 단계가 바뀌었는지 확인
+                             if (nextKey.stepIndex !== currentKey.stepIndex) {
+                                 this.displaySpecialStepContent(nextKey.stepIndex);
+                             }
+                         }
+                     } else {
+                         // 모든 키 완료
+                         this.goToNextSpecialStep();
+                     }
+                 }
+             });
+         } else {
+             // 틀린 입력 - 흔들림 효과
+             this.tweens.add({
+                 targets: currentKey,
+                 x: currentKey.x + 5,
+                 duration: 50,
+                 yoyo: true,
+                 repeat: 2
+             });
+         }
+     }*/
     processSpecialCommandInput(action) {
-        const currentKey = this.specialCommandKeys[this.activeKeyIndex];
+        // 터치 딜레이 체크와 canClick 상태 확인 추가
+        if (!this.canClick || !this.checkTouchDelay()) return;
 
+        const currentKey = this.specialCommandKeys[this.activeKeyIndex];
         if (!currentKey) return;
 
-        console.log('현재 활성화된 키:', this.activeKeyIndex);
-        console.log('입력된 액션:', action);
-        console.log('현재 키 액션:', currentKey.action);
-
         if (action === currentKey.action) {
-            console.log('올바른 액션 입력됨');
+            // 입력 처리 시작 전에 클릭 비활성화
+            this.disableClickTemporarily();
 
             // 현재 키 비활성화 및 날아가는 애니메이션
             currentKey.active = false;
