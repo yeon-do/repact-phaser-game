@@ -17,6 +17,9 @@ class GameScene extends Phaser.Scene {
         this.health = 3; // 체력 변수 (하트 3개)
         this.AVERAGE_LEVEL_TIME = 60 * 1000; // 60초(밀리초) 기준
 
+        this._specialKeydownHandler = null;
+        this._specialPointerHandlers = { left: null, down: null, right: null };
+
 
         // 레벨별 아이템 데이터
         this.levelRounds = {
@@ -4344,111 +4347,44 @@ class GameScene extends Phaser.Scene {
     }
     handleSpecialCommand() {
         // 이전 이벤트 리스너 제거
-        this.input.keyboard.off('keydown');
+        if (this._specialKeydownHandler) {
+            this.input.keyboard.off('keydown', this._specialKeydownHandler);
+        }
         ['left', 'down', 'right'].forEach(dir => {
-            if (this.commandButtons[dir]) {
-                this.commandButtons[dir].off('pointerdown');
+            if (this.commandButtons[dir] && this._specialPointerHandlers[dir]) {
+                this.commandButtons[dir].off('pointerdown', this._specialPointerHandlers[dir]);
             }
         });
 
         // 새로운 이벤트 리스너 등록
-        const handleInput = (action) => {
-            if (!this.specialStepInputEnabled) return;
-            this.processSpecialCommandInput(action);
-        };
-
-        // 키보드 이벤트
-        this.input.keyboard.on('keydown', (event) => {
+        this._specialKeydownHandler = (event) => {
             let action = null;
             if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.LEFT) action = 'left';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.DOWN) action = 'down';
             else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.RIGHT) action = 'right';
+            if (action) this.processSpecialCommandInput(action);
+        };
+        this.input.keyboard.on('keydown', this._specialKeydownHandler);
 
-            if (action) handleInput(action);
-        });
-
-        // 터치 이벤트
         ['left', 'down', 'right'].forEach(dir => {
+            this._specialPointerHandlers[dir] = () => this.processSpecialCommandInput(dir);
             if (this.commandButtons[dir]) {
-                this.commandButtons[dir].on('pointerdown', () => handleInput(dir));
+                this.commandButtons[dir].on('pointerdown', this._specialPointerHandlers[dir]);
             }
         });
     }
-    /*
-     processSpecialCommandInput(action) {
-         const currentKey = this.specialCommandKeys[this.activeKeyIndex];
- 
-         if (!currentKey) return;
- 
-         console.log('현재 활성화된 키:', this.activeKeyIndex);
-         console.log('입력된 액션:', action);
-         console.log('현재 키 액션:', currentKey.action);
- 
-         if (action === currentKey.action) {
-             console.log('올바른 액션 입력됨');
- 
-             // 현재 키 비활성화 및 날아가는 애니메이션
-             currentKey.active = false;
-             this.tweens.add({
-                 targets: currentKey,
-                 y: currentKey.y - 50,
-                 alpha: 0,
-                 duration: 400,
-                 onComplete: () => {
-                     currentKey.destroy();
- 
-                     // 남은 키들 앞으로 당기기
-                     for (let i = this.activeKeyIndex + 1; i < this.specialCommandKeys.length; i++) {
-                         const key = this.specialCommandKeys[i];
-                         if (key && !key.destroyed) {
-                             this.tweens.add({
-                                 targets: key,
-                                 x: 238 + ((i - this.activeKeyIndex - 1) * 24),
-                                 duration: 300
-                             });
-                         }
-                     }
- 
-                     // 다음 키 활성화
-                     this.activeKeyIndex++;
-                     if (this.activeKeyIndex < this.specialCommandKeys.length) {
-                         const nextKey = this.specialCommandKeys[this.activeKeyIndex];
-                         if (nextKey && !nextKey.destroyed) {
-                             nextKey.active = true;
-                             nextKey.setTexture(`${nextKey.action}_key_img`);
- 
-                             // 단계가 바뀌었는지 확인
-                             if (nextKey.stepIndex !== currentKey.stepIndex) {
-                                 this.displaySpecialStepContent(nextKey.stepIndex);
-                             }
-                         }
-                     } else {
-                         // 모든 키 완료
-                         this.goToNextSpecialStep();
-                     }
-                 }
-             });
-         } else {
-             // 틀린 입력 - 흔들림 효과
-             this.tweens.add({
-                 targets: currentKey,
-                 x: currentKey.x + 5,
-                 duration: 50,
-                 yoyo: true,
-                 repeat: 2
-             });
-         }
-     }*/
-    processSpecialCommandInput(action) {
-        // 터치 딜레이 체크와 canClick 상태 확인 추가
-        if (!this.canClick || !this.checkTouchDelay()) return;
 
+    processSpecialCommandInput(action) {
         const currentKey = this.specialCommandKeys[this.activeKeyIndex];
+
         if (!currentKey) return;
 
+        console.log('현재 활성화된 키:', this.activeKeyIndex);
+        console.log('입력된 액션:', action);
+        console.log('현재 키 액션:', currentKey.action);
+
         if (action === currentKey.action) {
-            // 입력 처리 시작 전에 클릭 비활성화
-            this.disableClickTemporarily();
+            console.log('올바른 액션 입력됨');
 
             // 현재 키 비활성화 및 날아가는 애니메이션
             currentKey.active = false;
