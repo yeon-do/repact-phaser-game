@@ -281,7 +281,7 @@ class GameScene extends Phaser.Scene {
                 messagePreprocessed: "잘 정리됐어! 이제 종이팩 수거함에 넣자!",
                 messagePreprocessingComplete: "휴, 드디어 두유팩을\n분리배출 가능한 상태로 만들었어!", // 새로 추가
                 messageAfterPreprocessing: "자, 이제 그럼 다시 분리배출 해볼까?", // 고정 메시지
-                messageCorrect: "정답이야! 두유팩은 멸균팩으로 배출해야해.\n 일반 종이팩과는 구별해야하니 명심해!!!",
+                messageCorrect: "정답이야! 두유팩은 멸균팩으로 배출해야해.\n 일반 종이팩과는 구분해야하니 명심해!!!",
                 messageIncorrect: "오답이야!\n두유팩의 배출 방법을 다시 생각해 볼까?"
             },
             {
